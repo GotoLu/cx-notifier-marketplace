@@ -12,11 +12,27 @@ class PluginFileTests(unittest.TestCase):
     def test_manifest_and_default_hook_discovery(self) -> None:
         manifest = json.loads((ROOT / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8"))
         self.assertEqual(manifest["name"], ROOT.name)
-        self.assertEqual(manifest["version"].split("+", 1)[0], "0.1.0")
+        self.assertEqual(manifest["version"].split("+", 1)[0], "0.2.0")
         self.assertNotIn("hooks", manifest)
         self.assertNotIn("apps", manifest)
         self.assertNotIn("mcpServers", manifest)
         self.assertTrue((ROOT / "hooks" / "hooks.json").is_file())
+
+    def test_claude_manifest_and_shared_hooks(self) -> None:
+        manifest = json.loads(
+            (ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(manifest["name"], ROOT.name)
+        self.assertNotIn("hooks", manifest)
+        hooks = json.loads((ROOT / "hooks" / "hooks.json").read_text(encoding="utf-8"))[
+            "hooks"
+        ]
+        self.assertEqual(set(hooks), {"PermissionRequest", "Stop"})
+        for groups in hooks.values():
+            for group in groups:
+                for handler in group["hooks"]:
+                    self.assertEqual(handler["timeout"], 5)
+                    self.assertIn("${CLAUDE_PLUGIN_ROOT:-${PLUGIN_ROOT}}", handler["command"])
 
     def test_hooks_are_notification_only_and_bounded(self) -> None:
         hooks = json.loads((ROOT / "hooks" / "hooks.json").read_text(encoding="utf-8"))["hooks"]
@@ -28,6 +44,7 @@ class PluginFileTests(unittest.TestCase):
                     self.assertEqual(handler["type"], "command")
                     self.assertEqual(handler["timeout"], 5)
                     self.assertIn("${PLUGIN_ROOT}", handler["command"])
+                    self.assertIn("${CLAUDE_PLUGIN_ROOT", handler["command"])
                     command = handler["command"].lower()
                     self.assertNotIn("allow", command)
                     self.assertNotIn("deny", command)

@@ -1,17 +1,17 @@
-# Codex Notifier
+# Codex / Claude Code Notifier
 
-`cx-plugin` 只处理两种 Codex 原生 Hook 事件，并向飞书、企业微信群机器人或通用 HTTPS Webhook 发送单向提醒：
+`cx-plugin` 同时支持 Codex 和 Claude Code，只处理两种原生 Hook 事件，并向飞书、企业微信群机器人或通用 HTTPS Webhook 发送单向提醒：
 
-- `PermissionRequest`：Codex 有操作等待用户审批；
-- `Stop`：Codex 本次回复已经结束。
+- `PermissionRequest`：编码代理有操作等待用户审批；
+- `Stop`：编码代理本次回复已经结束。
 
-插件不解析助手回复中的关键词，不使用“红线操作”或自定义 marker，也不接入 Server 酱或个人微信。通知端不允许远程批准，任何批准或拒绝仍必须回到 Codex 完成。
+插件不解析助手回复中的关键词，不使用“红线操作”或自定义 marker，也不接入 Server 酱或个人微信。通知端不允许远程批准，任何批准或拒绝仍必须回到对应的 Codex 或 Claude Code 会话完成。
 
 ## 行为边界
 
-`PermissionRequest` 是 Codex 的原生权限事件。只有当前审批策略确实要求用户确认时，Codex 才会触发它。
+`PermissionRequest` 是 Codex 和 Claude Code 都支持的原生权限事件。只有当前审批策略确实要求用户确认时才会触发。
 
-`Stop` 是 Codex 的原生回复结束事件。插件对每个 `Stop` 都发送“Codex 任务已结束”，并附上经过长度限制和脱敏的本次任务简介。插件不判断任务是否在业务语义上真正完成。因此，助手完成任务、回答问题或结束回复等待你继续输入时，都会收到结束提醒。
+`Stop` 是原生回复结束事件。插件对每个 `Stop` 都发送对应客户端的“任务已结束”提醒，并附上经过长度限制和脱敏的本次任务简介。插件不判断任务是否在业务语义上真正完成。因此，助手完成任务、回答问题或结束回复等待你继续输入时，都会收到结束提醒。
 
 插件忽略其他 Hook 事件。相同会话、相同回合和相同事件的重试会被去重；不同回合分别通知。
 
@@ -19,7 +19,7 @@
 
 ```mermaid
 flowchart TD
-    A[Codex Hook 事件] --> B{事件类型}
+    A[Codex 或 Claude Code Hook 事件] --> B{事件类型}
     B -->|PermissionRequest| C[构造权限审批提醒]
     B -->|Stop| D[构造任务结束提醒]
     B -->|其他| Z[忽略]
@@ -34,9 +34,9 @@ flowchart TD
     H --> J[Hook 输出空 JSON 并退出 0]
 ```
 
-网络失败采用 fail-open：通知器记录脱敏诊断后仍输出 `{}`、退出 `0`，不会阻断 Codex，也绝不会自动批准操作。
+网络失败采用 fail-open：通知器记录脱敏诊断后仍输出 `{}`、退出 `0`，不会阻断编码代理，也绝不会自动批准操作。
 
-## 安装
+## Codex 安装
 
 先添加公开 marketplace，再安装插件：
 
@@ -49,6 +49,19 @@ codex plugin add cx-plugin@cx-notifier
 
 1. 在 Codex 出现 Hook 信任提示时确认信任；
 2. 启动一个新会话，让新版 Hook 生效。
+
+## Claude Code 安装
+
+先添加公开 marketplace，再安装插件：
+
+```bash
+claude plugin marketplace add GotoLu/cx-notifier-marketplace
+claude plugin install cx-plugin@cx-notifier
+```
+
+Claude Code 和 Codex 会从同一个 `hooks/hooks.json` 注册 `PermissionRequest` 和 `Stop`。Hook 命令会优先使用 Claude Code 的 `CLAUDE_PLUGIN_ROOT`，否则回退到 Codex 的 `PLUGIN_ROOT`，安装到任一插件缓存后都能正确定位入口。
+
+安装或更新后运行 `/reload-plugins`，或启动新会话；再通过 `/hooks` 确认两类 Hook 已注册。
 
 ## 配置
 
@@ -143,14 +156,14 @@ python3 scripts/configure.py remove feishu-main
 
 `privacy.include_permission_description` 默认是 `false`。显式开启后只发送经过长度限制和脱敏的权限说明，但仍建议高敏项目保持关闭。
 
-去重状态和脱敏日志优先写入 `CX_NOTIFY_DATA`，其次写入 `PLUGIN_DATA`；两者均未设置时使用配置目录旁的 `data/`。状态不会写入任务项目仓库。
+去重状态和脱敏日志优先写入 `CX_NOTIFY_DATA`，其次写入 Claude Code 的 `CLAUDE_PLUGIN_DATA` 或 Codex 的 `PLUGIN_DATA`；均未设置时使用配置目录旁的 `data/`。状态不会写入任务项目仓库。
 
 安全边界：
 
 - 通知中没有批准链接；
 - Hook 不返回 `allow`、`deny` 或阻塞决定；
-- 飞书、企业微信和 Webhook 不能反向控制 Codex；
-- 通知送达状态不能作为 Codex 继续执行的授权；
+- 飞书、企业微信和 Webhook 不能反向控制 Codex 或 Claude Code；
+- 通知送达状态不能作为编码代理继续执行的授权；
 - Server 酱、个人微信机器人和远程批准不在范围内。
 
 ## 验收标准
@@ -175,7 +188,7 @@ python3 scripts/configure.py validate
 python3 -m unittest discover -s tests -v
 ```
 
-真实冒烟测试应在新 Codex 会话中分别触发一次权限审批和一次普通回复结束，确认两类飞书消息都能收到且 Codex 原流程不受影响。
+真实冒烟测试应分别在新的 Codex 和 Claude Code 会话中触发一次权限审批和一次普通回复结束，确认消息来源显示正确，且原审批流程不受影响。
 
 ## 排查
 
@@ -186,3 +199,10 @@ python3 -m unittest discover -s tests -v
 3. Codex 中已经信任 `PermissionRequest` 和 `Stop` Hooks；
 4. `python3 scripts/configure.py validate` 通过；
 5. 权限测试确实触发了原生 `PermissionRequest`，而不是助手仅用文字询问。
+
+Claude Code 还需确认：
+
+1. `cx-plugin@cx-notifier` 已安装并启用；
+2. `/hooks` 中能看到来自 `cx-plugin` 的 `PermissionRequest` 和 `Stop`；
+3. `python3` 在 Claude Code 运行环境的 `PATH` 中可用；
+4. 必要时运行 `claude --debug` 查看 Hook 加载诊断。

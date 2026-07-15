@@ -198,6 +198,7 @@ def run_hook(
     environ: Mapping[str, str] | None = None,
     config_path: Path | None = None,
     transport: Transport = send_once,
+    client: str = "codex",
 ) -> dict[str, int]:
     """Handle one hook input without ever making an approval decision."""
 
@@ -214,6 +215,7 @@ def run_hook(
         data,
         project_name_mode=config.privacy.project_name,
         include_permission_description=config.privacy.include_permission_description,
+        client=client,
     )
     if result.diagnostic:
         logger.write(result.diagnostic, event=str(data.get("hook_event_name") or "unknown"))

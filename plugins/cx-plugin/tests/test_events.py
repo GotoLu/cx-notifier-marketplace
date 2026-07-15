@@ -98,6 +98,17 @@ class EventParsingTests(unittest.TestCase):
     def test_unknown_event_is_ignored(self) -> None:
         self.assertIsNone(parse_hook_event({"hook_event_name": "PostToolUse"}).event)
 
+    def test_claude_code_event_has_claude_identity_and_schema(self) -> None:
+        result = parse_hook_event(self.permission_input(), client="claude_code")
+        assert result.event is not None
+        payload = result.event.payload()
+        self.assertEqual(payload["client"], "claude_code")
+        self.assertEqual(payload["schema"], "claude.notification.v1")
+        self.assertEqual(payload["title"], "Claude Code 有一项操作等待审批")
+        rendered = result.event.render_text()
+        self.assertIn("Claude Code 待确认", rendered)
+        self.assertIn("请返回 Claude Code", rendered)
+
     def test_hash_project_mode_hides_directory_name(self) -> None:
         result = parse_hook_event(self.permission_input(), project_name_mode="hash")
         assert result.event is not None

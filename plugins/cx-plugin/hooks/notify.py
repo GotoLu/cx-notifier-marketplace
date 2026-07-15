@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Codex Hook entrypoint. It always exits without an approval decision."""
+"""Codex and Claude Code Hook entrypoint; never returns an approval decision."""
 
 from __future__ import annotations
 
@@ -53,6 +53,11 @@ def _read_input() -> dict[str, Any] | None:
 
 
 def main() -> int:
+    client = (
+        "claude_code"
+        if "--client=claude" in sys.argv[1:] or os.environ.get("CLAUDE_PLUGIN_ROOT")
+        else "codex"
+    )
     completed = threading.Event()
     watchdog = threading.Thread(
         target=_deadline_guard,
@@ -65,9 +70,9 @@ def main() -> int:
         data = _read_input()
         if data is not None:
             try:
-                run_hook(data)
+                run_hook(data, client=client)
             except Exception:
-                # Notification failures must never change the Codex approval flow.
+                # Notification failures must never change the agent approval flow.
                 pass
     finally:
         _emit_empty_response()

@@ -1,3 +1,3 @@
-"""Core notification support for the cx-plugin Codex hooks."""
+"""Core notification support for the cx-plugin coding-agent hooks."""
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"

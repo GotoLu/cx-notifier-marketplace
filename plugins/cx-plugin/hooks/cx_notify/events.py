@@ -1,4 +1,4 @@
-"""Parse supported Codex hook events into a minimal outbound schema."""
+"""Parse supported coding-agent hook events into a minimal outbound schema."""
 
 from __future__ import annotations
 
@@ -20,13 +20,20 @@ class NotificationEvent:
     session_id_hash: str
     turn_id_hash: str
     title: str
+    client: str = "codex"
     tool_name: str | None = None
     detail: str | None = None
     task_summary: str | None = None
 
     def payload(self) -> dict[str, Any]:
+        schema = (
+            "claude.notification.v1"
+            if self.client == "claude_code"
+            else "codex.notification.v1"
+        )
         result: dict[str, Any] = {
-            "schema": "codex.notification.v1",
+            "schema": schema,
+            "client": self.client,
             "notification_id": self.notification_id,
             "event": self.event,
             "occurred_at": self.occurred_at,
@@ -45,16 +52,21 @@ class NotificationEvent:
         return result
 
     def render_text(self) -> str:
+        client_name = "Claude Code" if self.client == "claude_code" else "Codex"
         kind = {
             "permission_request": "权限审批",
             "task_completed": "任务结束",
             "test": "配置测试",
         }.get(self.event, "通知")
-        heading = "【Codex 任务结束】" if self.event == "task_completed" else "【Codex 待确认】"
-        footer = (
-            "本次 Codex 任务已结束。"
+        heading = (
+            f"【{client_name} 任务结束】"
             if self.event == "task_completed"
-            else "请返回 Codex 查看并操作；此消息不能用于授权。"
+            else f"【{client_name} 待确认】"
+        )
+        footer = (
+            f"本次 {client_name} 任务已结束。"
+            if self.event == "task_completed"
+            else f"请返回 {client_name} 查看并操作；此消息不能用于授权。"
         )
         lines = [
             heading,
@@ -95,6 +107,7 @@ def _base_event(
     dedupe_material: str,
     title: str,
     project_name_mode: str,
+    client: str,
     tool_name: str | None = None,
     detail: str | None = None,
     task_summary: str | None = None,
@@ -104,6 +117,7 @@ def _base_event(
     session_id = str(data.get("session_id") or "unknown-session")
     turn_id = str(data.get("turn_id") or "unknown-turn")
     dedupe_source = {
+        "client": client,
         "event": event_name,
         "session": session_id,
         "material": dedupe_material,
@@ -120,6 +134,7 @@ def _base_event(
         session_id_hash=f"sha256:{sha256_short(session_id, 20)}",
         turn_id_hash=f"sha256:{sha256_short(turn_id, 20)}",
         title=sanitize_text(title, 120),
+        client=client,
         tool_name=sanitize_text(tool_name, 80) if tool_name else None,
         detail=sanitize_text(detail, 200) if detail else None,
         task_summary=sanitize_text(task_summary, 200) if task_summary else None,
@@ -131,6 +146,7 @@ def parse_hook_event(
     *,
     project_name_mode: str = "basename",
     include_permission_description: bool = False,
+    client: str = "codex",
 ) -> ParseResult:
     """Parse only native permission requests and task-ending Stop events."""
 
@@ -149,8 +165,13 @@ def parse_hook_event(
                 data,
                 event_name="permission_request",
                 dedupe_material=material,
-                title="Codex 有一项操作等待审批",
+                title=(
+                    "Claude Code 有一项操作等待审批"
+                    if client == "claude_code"
+                    else "Codex 有一项操作等待审批"
+                ),
                 project_name_mode=project_name_mode,
+                client=client,
                 tool_name=tool_name,
                 detail=description,
             )
@@ -169,8 +190,13 @@ def parse_hook_event(
                 data,
                 event_name="task_completed",
                 dedupe_material=material,
-                title="Codex 任务已结束",
+                title=(
+                    "Claude Code 任务已结束"
+                    if client == "claude_code"
+                    else "Codex 任务已结束"
+                ),
                 project_name_mode=project_name_mode,
+                client=client,
                 task_summary=task_summary,
             )
         )

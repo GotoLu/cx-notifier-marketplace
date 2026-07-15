@@ -167,7 +167,11 @@ def resolve_data_dir(
     environ: Mapping[str, str] | None = None, *, config_path: Path | None = None
 ) -> Path:
     environment = os.environ if environ is None else environ
-    override = environment.get("CX_NOTIFY_DATA") or environment.get("PLUGIN_DATA")
+    override = (
+        environment.get("CX_NOTIFY_DATA")
+        or environment.get("CLAUDE_PLUGIN_DATA")
+        or environment.get("PLUGIN_DATA")
+    )
     if override:
         return Path(override).expanduser()
     path = config_path or resolve_config_path(environment)

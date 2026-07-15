@@ -1,0 +1,20 @@
+{
+  "name": "cx-notifier",
+  "owner": {
+    "name": "GotoLu"
+  },
+  "description": "Privacy-minimized notifications for Codex and Claude Code.",
+  "plugins": [
+    {
+      "name": "cx-plugin",
+      "source": "./plugins/cx-plugin",
+      "description": "Send permission and task-ending notifications to Feishu, WeCom, or HTTPS webhooks.",
+      "category": "Productivity",
+      "tags": [
+        "notifications",
+        "approvals",
+        "webhooks"
+      ]
+    }
+  ]
+}

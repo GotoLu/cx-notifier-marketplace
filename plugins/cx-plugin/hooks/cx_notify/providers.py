@@ -14,6 +14,7 @@ import urllib.request
 from dataclasses import dataclass
 from typing import Any, Mapping
 
+from . import __version__
 from .config import ResolvedChannel
 from .events import NotificationEvent
 
@@ -141,11 +142,14 @@ def prepare_request(
     headers = {
         "Content-Type": "application/json; charset=utf-8",
         "Accept": "application/json",
-        "User-Agent": "cx-plugin/0.1.0",
+        "User-Agent": f"cx-plugin/{__version__}",
         "Idempotency-Key": event.notification_id,
     }
     if channel.type == "webhook":
-        headers["X-Codex-Notification-Schema"] = "codex.notification.v1"
+        schema = event.payload()["schema"]
+        headers["X-CX-Notification-Schema"] = schema
+        if event.client == "codex":
+            headers["X-Codex-Notification-Schema"] = schema
         if channel.bearer_token:
             headers["Authorization"] = f"Bearer {channel.bearer_token}"
     body = json.dumps(

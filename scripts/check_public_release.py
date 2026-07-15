@@ -142,23 +142,40 @@ def main() -> int:
             continue
         problems.extend(scan_file(path))
 
-    manifest_path = PLUGIN / ".codex-plugin" / "plugin.json"
-    marketplace_path = ROOT / ".agents" / "plugins" / "marketplace.json"
+    codex_manifest_path = PLUGIN / ".codex-plugin" / "plugin.json"
+    claude_manifest_path = PLUGIN / ".claude-plugin" / "plugin.json"
+    codex_marketplace_path = ROOT / ".agents" / "plugins" / "marketplace.json"
+    claude_marketplace_path = ROOT / ".claude-plugin" / "marketplace.json"
     try:
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        marketplace = json.loads(marketplace_path.read_text(encoding="utf-8"))
+        codex_manifest = json.loads(codex_manifest_path.read_text(encoding="utf-8"))
+        claude_manifest = json.loads(claude_manifest_path.read_text(encoding="utf-8"))
+        codex_marketplace = json.loads(codex_marketplace_path.read_text(encoding="utf-8"))
+        claude_marketplace = json.loads(claude_marketplace_path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
         problems.append(f"invalid release metadata: {exc}")
     else:
-        if manifest.get("name") != "cx-plugin":
-            problems.append("plugin manifest name must be cx-plugin")
-        if "+codex." in str(manifest.get("version", "")):
+        manifests = (codex_manifest, claude_manifest)
+        if any(manifest.get("name") != "cx-plugin" for manifest in manifests):
+            problems.append("both plugin manifest names must be cx-plugin")
+        versions = {str(manifest.get("version", "")) for manifest in manifests}
+        if len(versions) != 1:
+            problems.append("Codex and Claude plugin versions must match")
+        if "+codex." in str(codex_manifest.get("version", "")):
             problems.append("public manifest must not contain a local cachebuster")
-        if manifest.get("author", {}).get("name") == "Local developer":
+        if any(
+            manifest.get("author", {}).get("name") == "Local developer"
+            for manifest in manifests
+        ):
             problems.append("public manifest contains local publisher metadata")
-        entries = marketplace.get("plugins", [])
-        if len(entries) != 1 or entries[0].get("name") != "cx-plugin":
-            problems.append("marketplace must contain exactly the cx-plugin entry")
+        for platform, marketplace in (
+            ("Codex", codex_marketplace),
+            ("Claude", claude_marketplace),
+        ):
+            entries = marketplace.get("plugins", [])
+            if len(entries) != 1 or entries[0].get("name") != "cx-plugin":
+                problems.append(
+                    f"{platform} marketplace must contain exactly the cx-plugin entry"
+                )
 
     if problems:
         for problem in sorted(set(problems)):

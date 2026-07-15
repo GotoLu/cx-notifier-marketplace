@@ -95,6 +95,22 @@ class ProviderTests(unittest.TestCase):
         self.assertEqual(request.headers["Authorization"], "Bearer top-secret-token")
         self.assertNotIn("top-secret-token", request.body.decode("utf-8"))
 
+    def test_claude_generic_payload_and_header_identify_source(self) -> None:
+        channel = ResolvedChannel(
+            name="generic",
+            type="webhook",
+            webhook_url="https://hooks.example.com/claude",
+        )
+        request = prepare_request(channel, replace(self.event, client="claude_code"))
+        payload = json.loads(request.body)
+        self.assertEqual(payload["client"], "claude_code")
+        self.assertEqual(payload["schema"], "claude.notification.v1")
+        self.assertEqual(
+            request.headers["X-CX-Notification-Schema"],
+            "claude.notification.v1",
+        )
+        self.assertNotIn("X-Codex-Notification-Schema", request.headers)
+
     def test_provider_hosts_and_schemes_are_pinned(self) -> None:
         with self.assertRaises(ProviderError):
             validate_webhook_url("https://open.feishu.cn.evil.test/hook", "feishu")

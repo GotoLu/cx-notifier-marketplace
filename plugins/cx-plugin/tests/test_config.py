@@ -17,6 +17,7 @@ from cx_notify.config import (  # noqa: E402
     ConfigError,
     default_config,
     load_config,
+    resolve_data_dir,
     write_config,
 )
 
@@ -36,6 +37,15 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(config.delivery.timeout_seconds, 1.5)
         if os.name != "nt":
             self.assertEqual(stat.S_IMODE(self.path.stat().st_mode), 0o600)
+
+    def test_claude_plugin_data_directory_is_supported(self) -> None:
+        claude_data = Path(self.temporary.name) / "claude-data"
+        self.assertEqual(
+            resolve_data_dir(
+                {"CLAUDE_PLUGIN_DATA": str(claude_data)}, config_path=self.path
+            ),
+            claude_data,
+        )
 
     def test_environment_references_are_resolved_without_persisting_values(self) -> None:
         data = default_config()
