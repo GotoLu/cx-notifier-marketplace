@@ -185,7 +185,24 @@ python3 scripts/configure.py test --channel feishu-main
 
 测试成功后，重新加载插件：Claude Code 运行 `/reload-plugins`，Codex 新建一个任务。随后分别触发一次权限请求或完成一次普通回复，确认能收到真实通知。
 
-### 6. 配置文件位置
+### 6. 暂停和恢复推送
+
+需要临时关闭全部通知时，在插件根目录运行：
+
+```bash
+python3 scripts/pause.py
+```
+
+查看当前状态或恢复推送：
+
+```bash
+python3 scripts/pause.py --status
+python3 scripts/pause.py --resume
+```
+
+脚本默认修改 `~/.config/cx-plugin/config.json`；如果使用了其他配置文件，可增加 `--config /absolute/path/config.json`。暂停只设置全局 `paused` 状态，不会修改各渠道原有的 `enabled` 配置，恢复后原有渠道配置继续生效。
+
+### 7. 配置文件位置
 
 默认配置文件：
 
