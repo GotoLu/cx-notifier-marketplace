@@ -1,10 +1,10 @@
-# CX Notifier — Codex / Claude Code 离岗提醒器
+# CX Notifier — 别拿自己当轮询器
 
 <p align="center">
-  <img src="plugins/cx-plugin/assets/social-preview.svg" alt="让 Agent 跑，轮到你再回来" width="920">
+  <img src="plugins/cx-plugin/assets/social-preview.svg" alt="别拿自己当轮询器" width="920">
 </p>
 
-**让 Agent 跑，轮到你再回来。** CX Notifier 在 Codex 或 Claude Code 需要审批、结束当前回复时，把隐私最小化的单向提醒发送到飞书、企业微信、钉钉、macOS/Linux 桌面或 HTTPS Webhook。
+**别守着终端，跑完让它喊你。** 把任务扔给 Codex 或 Claude Code，然后去干点别的。它要审批、跑完当前回复时，CX Notifier 会通过飞书、企业微信、钉钉、macOS/Linux 桌面或 HTTPS Webhook 喊你回来。
 
 - 不发送代码、diff、终端输出、工具参数或助手回复；
 - 通知端不允许远程批准，操作仍须回到原会话完成；

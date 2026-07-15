@@ -2,7 +2,7 @@
   "name": "cx-plugin",
   "displayName": "CX Notifier",
   "version": "0.5.2",
-  "description": "Get notified when Codex or Claude Code needs approval or finishes a response.",
+  "description": "Stop babysitting your terminal. Get notified when Codex or Claude Code needs you.",
   "author": {
     "name": "GotoLu",
     "url": "https://github.com/GotoLu"

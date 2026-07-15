@@ -1,12 +1,12 @@
-# CX Notifier — Codex / Claude Code 离岗提醒器
+# CX Notifier — 别拿自己当轮询器
 
 <p align="center">
   <img src="assets/logo.svg" alt="CX Notifier" width="760">
 </p>
 
-<p align="center"><strong>让 Agent 跑，轮到你再回来。</strong></p>
+<p align="center"><strong>别守着终端，跑完让它喊你。</strong></p>
 
-Codex 或 Claude Code 需要审批、结束当前回复时，CX Notifier 会把单向提醒发送到飞书、企业微信、钉钉、macOS/Linux 桌面或 HTTPS Webhook。你不用反复切回终端确认进度。
+把任务扔给 Codex 或 Claude Code，然后去干点别的。它要审批、跑完当前回复时，CX Notifier 会通过飞书、企业微信、钉钉、macOS/Linux 桌面或 HTTPS Webhook 喊你回来。
 
 ![CX Notifier 从终端向手机发送隐私最小化提醒](assets/notification-preview.svg)
 
@@ -49,10 +49,10 @@ curl -fsSL https://raw.githubusercontent.com/GotoLu/cx-notifier-marketplace/main
 
 ## 为什么选择 CX Notifier
 
-- **不再守着终端**：只在需要你或当前回复结束时提醒；
-- **隐私最小化**：不发送代码、diff、终端输出、工具参数或助手回复；
-- **权限边界清晰**：通知端不允许远程批准，批准或拒绝必须回到原会话；
-- **一个插件覆盖两端**：Codex 和 Claude Code 共用 Hook、渠道及路由配置。
+- **不用人肉刷新**：只在需要你或当前回复结束时喊一声；
+- **只喊该喊的**：不发送代码、diff、终端输出、工具参数或助手回复；
+- **绝不替你手滑**：通知端不允许远程批准，批准或拒绝必须回到原会话；
+- **两头通吃**：Codex 和 Claude Code 共用 Hook、渠道及路由配置。
 
 ## 处理的事件
 

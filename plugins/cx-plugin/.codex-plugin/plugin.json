@@ -1,7 +1,7 @@
 {
   "name": "cx-plugin",
   "version": "0.5.2",
-  "description": "Get notified when Codex or Claude Code needs approval or finishes a response.",
+  "description": "Stop babysitting your terminal. Get notified when Codex or Claude Code needs you.",
   "author": {
     "name": "GotoLu",
     "url": "https://github.com/GotoLu"
@@ -22,7 +22,7 @@
   ],
   "interface": {
     "displayName": "CX Notifier",
-    "shortDescription": "Come back when your coding agent needs you.",
+    "shortDescription": "Stop babysitting your terminal.",
     "longDescription": "Sends privacy-minimized reminders when Codex or Claude Code needs approval or finishes a response. Route events to Feishu, WeCom, DingTalk, desktop, generic HTTPS, or HMAC-signed webhooks without uploading code, terminal output, or assistant responses.",
     "developerName": "GotoLu",
     "category": "Productivity",

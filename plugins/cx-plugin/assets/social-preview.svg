@@ -26,9 +26,9 @@
       <circle cx="67" cy="20" r="7" fill="#FBBF24"/>
     </g>
     <text x="170" y="119" fill="#E2E8F0" font-size="34" font-weight="720">CX Notifier</text>
-    <text x="72" y="256" fill="#F8FAFC" font-size="69" font-weight="780">让 Agent 跑，</text>
-    <text x="72" y="345" fill="#67E8F9" font-size="69" font-weight="780">轮到你再回来。</text>
-    <text x="76" y="415" fill="#B7C7D8" font-size="29">Codex / Claude Code 需要你时自动提醒</text>
+    <text x="72" y="256" fill="#F8FAFC" font-size="69" font-weight="780">别拿自己</text>
+    <text x="72" y="345" fill="#67E8F9" font-size="69" font-weight="780">当轮询器。</text>
+    <text x="76" y="415" fill="#B7C7D8" font-size="27">Codex / Claude Code 跑完或要审批，自动喊你</text>
     <g transform="translate(76 476)" font-size="22" font-weight="650">
       <rect width="138" height="48" rx="24" fill="#123147"/>
       <text x="69" y="31" text-anchor="middle" fill="#A5F3FC">单向通知</text>
