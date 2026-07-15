@@ -12,7 +12,7 @@ class PluginFileTests(unittest.TestCase):
     def test_manifest_and_default_hook_discovery(self) -> None:
         manifest = json.loads((ROOT / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8"))
         self.assertEqual(manifest["name"], ROOT.name)
-        self.assertEqual(manifest["version"].split("+", 1)[0], "0.2.0")
+        self.assertEqual(manifest["version"].split("+", 1)[0], "0.3.0")
         self.assertNotIn("hooks", manifest)
         self.assertNotIn("apps", manifest)
         self.assertNotIn("mcpServers", manifest)
@@ -27,7 +27,7 @@ class PluginFileTests(unittest.TestCase):
         hooks = json.loads((ROOT / "hooks" / "hooks.json").read_text(encoding="utf-8"))[
             "hooks"
         ]
-        self.assertEqual(set(hooks), {"PermissionRequest", "Stop"})
+        self.assertEqual(set(hooks), {"PermissionRequest", "UserPromptSubmit", "Stop"})
         for groups in hooks.values():
             for group in groups:
                 for handler in group["hooks"]:
@@ -36,7 +36,7 @@ class PluginFileTests(unittest.TestCase):
 
     def test_hooks_are_notification_only_and_bounded(self) -> None:
         hooks = json.loads((ROOT / "hooks" / "hooks.json").read_text(encoding="utf-8"))["hooks"]
-        self.assertEqual(set(hooks), {"PermissionRequest", "Stop"})
+        self.assertEqual(set(hooks), {"PermissionRequest", "UserPromptSubmit", "Stop"})
         self.assertEqual(hooks["PermissionRequest"][0]["matcher"], "*")
         for groups in hooks.values():
             for group in groups:

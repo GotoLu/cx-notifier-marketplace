@@ -70,6 +70,6 @@ python3 -m unittest discover -s plugins/cx-plugin/tests -v
 - 仓库只包含 `config.example.json`，不包含实际 `config.json`。
 - Webhook、签名密钥和 Bearer Token 应通过环境变量或用户本机的 `0600` 配置文件提供。
 - 插件不会上传 transcript、原始工具输入、shell 命令、diff 或终端输出。
-- 任务简介会限制长度，并对常见路径和凭据形状进行脱敏。
+- 任务结束通知只附带本回合用户提问的脱敏摘要（最长 160 字），不发送助手回复。
 
 安全问题请参考 [SECURITY.md](SECURITY.md)。本项目使用 [MIT License](LICENSE)。

@@ -7,10 +7,21 @@ import os
 import sqlite3
 import threading
 import time
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from .security import sanitize_text, sha256_short
+
+
+QUESTION_SUMMARY_MAX_CHARS = 160
+QUESTION_CONTEXT_MAX_AGE_SECONDS = 86400
+
+
+@dataclass(frozen=True)
+class QuestionContext:
+    summary: str
+    context_id: str
 
 
 class DeliveryState:
@@ -43,6 +54,16 @@ class DeliveryState:
                     delivery_key TEXT PRIMARY KEY,
                     notification_id TEXT NOT NULL,
                     status TEXT NOT NULL,
+                    updated_at REAL NOT NULL
+                )
+                """
+            )
+            self._connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS question_contexts (
+                    context_key TEXT PRIMARY KEY,
+                    question_summary TEXT NOT NULL,
+                    context_id TEXT NOT NULL,
                     updated_at REAL NOT NULL
                 )
                 """
@@ -109,6 +130,79 @@ class DeliveryState:
                 "UPDATE deliveries SET status = 'failed', updated_at = ? WHERE delivery_key = ?",
                 (time.time(), delivery_key),
             )
+
+    @staticmethod
+    def question_context_key(
+        client: str,
+        session_id: str,
+        turn_id: str | None = None,
+    ) -> str:
+        return sha256_short(f"{client}\0{session_id}\0{turn_id or ''}", 40)
+
+    def remember_question(
+        self,
+        *,
+        client: str,
+        session_id: str,
+        turn_id: str | None,
+        prompt: str,
+    ) -> QuestionContext | None:
+        """Persist only a redacted, bounded question summary for a later Stop."""
+
+        summary = sanitize_text(prompt, QUESTION_SUMMARY_MAX_CHARS)
+        if not summary:
+            return None
+        now = time.time()
+        context_id = sha256_short(
+            f"{now!r}\0{time.time_ns()}\0{os.getpid()}\0{threading.get_ident()}",
+            32,
+        )
+        context_key = self.question_context_key(client, session_id, turn_id)
+        with self._lock:
+            self._connection.execute(
+                """
+                INSERT INTO question_contexts(
+                    context_key, question_summary, context_id, updated_at
+                ) VALUES (?, ?, ?, ?)
+                ON CONFLICT(context_key) DO UPDATE SET
+                    question_summary = excluded.question_summary,
+                    context_id = excluded.context_id,
+                    updated_at = excluded.updated_at
+                """,
+                (context_key, summary, context_id, now),
+            )
+            self._connection.execute(
+                "DELETE FROM question_contexts WHERE updated_at < ?",
+                (now - QUESTION_CONTEXT_MAX_AGE_SECONDS,),
+            )
+        return QuestionContext(summary=summary, context_id=context_id)
+
+    def load_question(
+        self,
+        *,
+        client: str,
+        session_id: str,
+        turn_id: str | None,
+    ) -> QuestionContext | None:
+        """Load the current turn's question, with a session fallback for Claude Code."""
+
+        keys = [self.question_context_key(client, session_id, turn_id)]
+        if turn_id:
+            keys.append(self.question_context_key(client, session_id))
+        cutoff = time.time() - QUESTION_CONTEXT_MAX_AGE_SECONDS
+        with self._lock:
+            for context_key in keys:
+                row = self._connection.execute(
+                    """
+                    SELECT question_summary, context_id
+                    FROM question_contexts
+                    WHERE context_key = ? AND updated_at >= ?
+                    """,
+                    (context_key, cutoff),
+                ).fetchone()
+                if row:
+                    return QuestionContext(summary=str(row[0]), context_id=str(row[1]))
+        return None
 
     def purge(self, retention_seconds: int) -> None:
         with self._lock:

@@ -23,7 +23,7 @@ class NotificationEvent:
     client: str = "codex"
     tool_name: str | None = None
     detail: str | None = None
-    task_summary: str | None = None
+    question_summary: str | None = None
 
     def payload(self) -> dict[str, Any]:
         schema = (
@@ -47,8 +47,8 @@ class NotificationEvent:
             result["tool_name"] = self.tool_name
         if self.detail:
             result["detail"] = self.detail
-        if self.task_summary:
-            result["task_summary"] = self.task_summary
+        if self.question_summary:
+            result["question_summary"] = self.question_summary
         return result
 
     def render_text(self) -> str:
@@ -78,8 +78,8 @@ class NotificationEvent:
             lines.append(f"工具：{self.tool_name}")
         if self.detail:
             lines.append(f"说明：{self.detail}")
-        if self.task_summary:
-            lines.append(f"任务简介：{self.task_summary}")
+        if self.question_summary:
+            lines.append(f"提问：{self.question_summary}")
         lines.extend(
             [
                 f"时间：{self.occurred_at}",
@@ -110,7 +110,7 @@ def _base_event(
     client: str,
     tool_name: str | None = None,
     detail: str | None = None,
-    task_summary: str | None = None,
+    question_summary: str | None = None,
 ) -> NotificationEvent:
     cwd = str(data.get("cwd") or ".")
     project_name, project_id = project_identity(cwd, project_name_mode)
@@ -137,7 +137,9 @@ def _base_event(
         client=client,
         tool_name=sanitize_text(tool_name, 80) if tool_name else None,
         detail=sanitize_text(detail, 200) if detail else None,
-        task_summary=sanitize_text(task_summary, 200) if task_summary else None,
+        question_summary=(
+            sanitize_text(question_summary, 160) if question_summary else None
+        ),
     )
 
 
@@ -147,6 +149,8 @@ def parse_hook_event(
     project_name_mode: str = "basename",
     include_permission_description: bool = False,
     client: str = "codex",
+    question_summary: str | None = None,
+    question_context_id: str | None = None,
 ) -> ParseResult:
     """Parse only native permission requests and task-ending Stop events."""
 
@@ -178,13 +182,7 @@ def parse_hook_event(
         )
 
     if hook_name == "Stop":
-        message = data.get("last_assistant_message")
-        task_summary = (
-            message if isinstance(message, str) and message.strip() else None
-        )
-        material = canonical_hash(
-            {"last_assistant_message": message if isinstance(message, str) else None}
-        )
+        material = canonical_hash({"question_context_id": question_context_id})
         return ParseResult(
             _base_event(
                 data,
@@ -197,7 +195,7 @@ def parse_hook_event(
                 ),
                 project_name_mode=project_name_mode,
                 client=client,
-                task_summary=task_summary,
+                question_summary=question_summary,
             )
         )
 

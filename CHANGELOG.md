@@ -2,7 +2,11 @@
 
 ## Unreleased
 
+## 0.3.0 - 2026-07-15
+
 - Add a one-command Feishu setup helper that locates an installed Codex or Claude Code plugin and delegates secret entry to the existing secure configurator.
+- Send the sanitized, 160-character user-question summary in task-ending notifications instead of the assistant's final response.
+- Capture question context locally through `UserPromptSubmit`, with per-turn matching for Codex and session fallback for Claude Code.
 
 ## 0.2.0 - 2026-07-15
 

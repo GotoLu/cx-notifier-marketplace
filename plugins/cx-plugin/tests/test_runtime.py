@@ -153,25 +153,57 @@ class RuntimeTests(unittest.TestCase):
             events.append(event)
             return DeliveryResult(True, False, 200, "accepted")
 
-        summary = run_hook(
-            {"hook_event_name": "Stop", "last_assistant_message": "任务完成。"},
+        prompt_summary = run_hook(
+            {
+                "hook_event_name": "UserPromptSubmit",
+                "session_id": "stop-session",
+                "turn_id": "stop-turn",
+                "prompt": "帮我完成任务。",
+            },
             environ=self.environment,
             config_path=self.config_path,
             transport=transport,
         )
+        summary = run_hook(
+            {
+                "hook_event_name": "Stop",
+                "session_id": "stop-session",
+                "turn_id": "stop-turn",
+                "last_assistant_message": "任务完成。",
+            },
+            environ=self.environment,
+            config_path=self.config_path,
+            transport=transport,
+        )
+        self.assertEqual(prompt_summary["sent"], 0)
         self.assertEqual(summary["sent"], 1)
         self.assertEqual(len(events), 1)
         self.assertEqual(events[0].event, "task_completed")
         self.assertEqual(events[0].title, "Codex 任务已结束")
-        self.assertEqual(events[0].task_summary, "任务完成。")
+        self.assertEqual(events[0].question_summary, "帮我完成任务。")
 
-    def test_stop_summary_is_sanitized_before_delivery(self) -> None:
+    def test_question_summary_is_sanitized_before_delivery(self) -> None:
         events = []
 
         def transport(channel, event, **kwargs):
             events.append(event)
             return DeliveryResult(True, False, 200, "accepted")
 
+        captured = run_hook(
+            {
+                "hook_event_name": "UserPromptSubmit",
+                "session_id": "stop-session",
+                "turn_id": "stop-turn",
+                "cwd": "/tmp/demo",
+                "prompt": (
+                    "请删除 /private/tmp/1.txt，令牌 token=super-secret-value。"
+                    + "很长" * 200
+                ),
+            },
+            environ=self.environment,
+            config_path=self.config_path,
+            transport=transport,
+        )
         summary = run_hook(
             {
                 "hook_event_name": "Stop",
@@ -180,22 +212,60 @@ class RuntimeTests(unittest.TestCase):
                 "cwd": "/tmp/demo",
                 "last_assistant_message": (
                     "主人，删除文件属于项目规范的红线操作。"
-                    "是否允许我删除 /private/tmp/1.txt？"
+                    "是否允许我删除一份文件？"
                 ),
             },
             environ=self.environment,
             config_path=self.config_path,
             transport=transport,
         )
+        self.assertEqual(captured["sent"], 0)
         self.assertEqual(summary["sent"], 1)
         self.assertEqual(len(events), 1)
         payload = events[0].payload()
         self.assertEqual(payload["event"], "task_completed")
         self.assertEqual(payload["title"], "Codex 任务已结束")
-        self.assertIn("task_summary", payload)
-        self.assertIn("<path>", payload["task_summary"])
+        self.assertIn("question_summary", payload)
+        self.assertIn("<path>", payload["question_summary"])
+        self.assertIn("<redacted>", payload["question_summary"])
+        self.assertLessEqual(len(payload["question_summary"]), 160)
         self.assertNotIn("1.txt", str(payload))
         self.assertNotIn("/private/tmp", str(payload))
+        self.assertNotIn("主人", str(payload))
+
+        database = (self.data_dir / "deliveries.sqlite3").read_bytes()
+        self.assertNotIn(b"super-secret-value", database)
+        self.assertNotIn(b"/private/tmp/1.txt", database)
+
+    def test_claude_uses_latest_session_question_without_turn_id(self) -> None:
+        events = []
+
+        def transport(channel, event, **kwargs):
+            events.append(event)
+            return DeliveryResult(True, False, 200, "accepted")
+
+        for prompt in ("第一次提问", "第二次提问"):
+            run_hook(
+                {
+                    "hook_event_name": "UserPromptSubmit",
+                    "session_id": "claude-session",
+                    "prompt": prompt,
+                },
+                environ=self.environment,
+                config_path=self.config_path,
+                transport=transport,
+                client="claude_code",
+            )
+            run_hook(
+                {"hook_event_name": "Stop", "session_id": "claude-session"},
+                environ=self.environment,
+                config_path=self.config_path,
+                transport=transport,
+                client="claude_code",
+            )
+
+        self.assertEqual([event.question_summary for event in events], ["第一次提问", "第二次提问"])
+        self.assertNotEqual(events[0].dedupe_key, events[1].dedupe_key)
 
     def test_concurrent_claim_has_single_winner(self) -> None:
         state = DeliveryState(self.data_dir)

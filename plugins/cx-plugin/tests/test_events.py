@@ -51,17 +51,19 @@ class EventParsingTests(unittest.TestCase):
         self.assertNotIn("sk-supersecretvalue", detail)
         self.assertNotIn("/Users/alice", detail)
 
-    def test_stop_includes_a_sanitized_task_summary(self) -> None:
+    def test_stop_includes_a_sanitized_question_summary(self) -> None:
         result = parse_hook_event(
             {
                 "hook_event_name": "Stop",
                 "session_id": "stop-session",
                 "turn_id": "stop-turn",
                 "cwd": "/tmp/demo",
-                "last_assistant_message": (
-                    "已更新 /private/tmp/secret.txt，令牌 token=super-secret-value。"
-                ),
-            }
+                "last_assistant_message": "这段助手回复不应发送。",
+            },
+            question_summary=(
+                "请更新 /private/tmp/secret.txt，令牌 token=super-secret-value。"
+            ),
+            question_context_id="question-1",
         )
         self.assertIsNone(result.diagnostic)
         self.assertIsNotNone(result.event)
@@ -69,27 +71,39 @@ class EventParsingTests(unittest.TestCase):
         payload = result.event.payload()
         self.assertEqual(payload["event"], "task_completed")
         self.assertEqual(payload["title"], "Codex 任务已结束")
-        self.assertIn("task_summary", payload)
-        self.assertIn("<path>", payload["task_summary"])
-        self.assertIn("<redacted>", payload["task_summary"])
+        self.assertIn("question_summary", payload)
+        self.assertIn("<path>", payload["question_summary"])
+        self.assertIn("<redacted>", payload["question_summary"])
         self.assertNotIn("/private/tmp", str(payload))
         self.assertNotIn("super-secret-value", str(payload))
-        self.assertIn("任务简介：", result.event.render_text())
+        self.assertNotIn("这段助手回复", str(payload))
+        self.assertIn("提问：", result.event.render_text())
 
-    def test_stop_without_assistant_message_omits_task_summary(self) -> None:
-        result = parse_hook_event({"hook_event_name": "Stop"})
+    def test_stop_does_not_fall_back_to_assistant_message(self) -> None:
+        result = parse_hook_event(
+            {
+                "hook_event_name": "Stop",
+                "last_assistant_message": "很长的助手任务简介",
+            }
+        )
         assert result.event is not None
-        self.assertNotIn("task_summary", result.event.payload())
+        self.assertNotIn("question_summary", result.event.payload())
+        self.assertNotIn("很长的助手任务简介", result.event.render_text())
 
     def test_stop_deduplicates_retries_but_not_distinct_turns(self) -> None:
         base = {
             "hook_event_name": "Stop",
             "session_id": "same-session",
-            "last_assistant_message": "任务完成。",
         }
-        first = parse_hook_event({**base, "turn_id": "turn-1"})
-        retry = parse_hook_event({**base, "turn_id": "turn-1"})
-        next_turn = parse_hook_event({**base, "turn_id": "turn-2"})
+        first = parse_hook_event(
+            {**base, "turn_id": "turn-1"}, question_context_id="question-1"
+        )
+        retry = parse_hook_event(
+            {**base, "turn_id": "turn-1"}, question_context_id="question-1"
+        )
+        next_turn = parse_hook_event(
+            {**base, "turn_id": "turn-2"}, question_context_id="question-2"
+        )
         assert first.event is not None and retry.event is not None
         assert next_turn.event is not None
         self.assertEqual(first.event.dedupe_key, retry.event.dedupe_key)

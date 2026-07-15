@@ -1,6 +1,6 @@
 {
   "name": "cx-plugin",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Send privacy-minimized Codex and Claude Code notifications to configured chat webhooks.",
   "author": {
     "name": "GotoLu",

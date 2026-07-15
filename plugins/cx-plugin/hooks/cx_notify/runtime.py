@@ -13,7 +13,7 @@ from .config import ConfigError, PluginConfig, ResolvedChannel, load_config, res
 from .events import NotificationEvent, parse_hook_event
 from .providers import DeliveryResult, send_once
 from .security import canonical_hash, sha256_short
-from .state import DeliveryState, SafeLogger
+from .state import DeliveryState, QuestionContext, SafeLogger
 
 
 Transport = Callable[..., DeliveryResult]
@@ -211,11 +211,51 @@ def run_hook(
     except ConfigError:
         logger.write("config_error")
         return {"sent": 0, "failed": 0, "deduplicated": 0, "skipped": 1}
+
+    hook_name = data.get("hook_event_name")
+    question: QuestionContext | None = None
+    session_id = data.get("session_id")
+    turn_id = data.get("turn_id")
+    valid_session_id = (
+        session_id if isinstance(session_id, str) and session_id.strip() else None
+    )
+    valid_turn_id = turn_id if isinstance(turn_id, str) and turn_id.strip() else None
+    if hook_name in {"UserPromptSubmit", "Stop"} and valid_session_id:
+        try:
+            state = DeliveryState(data_dir)
+            try:
+                if hook_name == "UserPromptSubmit":
+                    prompt = data.get("prompt")
+                    if isinstance(prompt, str) and prompt.strip():
+                        state.remember_question(
+                            client=client,
+                            session_id=valid_session_id,
+                            turn_id=valid_turn_id,
+                            prompt=prompt,
+                        )
+                else:
+                    question = state.load_question(
+                        client=client,
+                        session_id=valid_session_id,
+                        turn_id=valid_turn_id,
+                    )
+            finally:
+                state.close()
+        except Exception:
+            logger.write(
+                "question_state_unavailable",
+                event=str(hook_name or "unknown"),
+            )
+    if hook_name == "UserPromptSubmit":
+        return {"sent": 0, "failed": 0, "deduplicated": 0, "skipped": 1}
+
     result = parse_hook_event(
         data,
         project_name_mode=config.privacy.project_name,
         include_permission_description=config.privacy.include_permission_description,
         client=client,
+        question_summary=question.summary if question else None,
+        question_context_id=question.context_id if question else None,
     )
     if result.diagnostic:
         logger.write(result.diagnostic, event=str(data.get("hook_event_name") or "unknown"))
