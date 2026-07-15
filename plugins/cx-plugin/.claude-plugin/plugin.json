@@ -1,8 +1,8 @@
 {
   "name": "cx-plugin",
   "displayName": "Codex / Claude Code Notifier",
-  "version": "0.3.0",
-  "description": "Send privacy-minimized permission and completion notifications to configured chat webhooks.",
+  "version": "0.5.0",
+  "description": "Route privacy-minimized permission and completion notifications to configurable providers.",
   "author": {
     "name": "GotoLu",
     "url": "https://github.com/GotoLu"

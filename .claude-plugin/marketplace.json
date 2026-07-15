@@ -8,7 +8,7 @@
     {
       "name": "cx-plugin",
       "source": "./plugins/cx-plugin",
-      "description": "Send permission and task-ending notifications to Feishu, WeCom, or HTTPS webhooks.",
+      "description": "Route permission and task-ending notifications to chat, desktop, or signed HTTPS providers.",
       "category": "Productivity",
       "tags": [
         "notifications",

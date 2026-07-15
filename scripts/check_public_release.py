@@ -89,6 +89,9 @@ def url_is_public_example(raw: str) -> bool:
     if host == "qyapi.weixin.qq.com":
         query = dict(parse_qsl(parsed.query))
         return not query or query.get("key") in {"example", "secret"}
+    if host == "oapi.dingtalk.com":
+        query = dict(parse_qsl(parsed.query))
+        return parsed.path == "/robot/send" and query.get("access_token") == "example"
     return False
 
 

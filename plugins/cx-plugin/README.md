@@ -1,6 +1,6 @@
 # Codex / Claude Code Notifier
 
-`cx-plugin` 同时支持 Codex 和 Claude Code，处理三种原生 Hook 事件，并向飞书、企业微信群机器人或通用 HTTPS Webhook 发送单向提醒：
+`cx-plugin` 同时支持 Codex 和 Claude Code，处理三种原生 Hook 事件，并将单向提醒路由到飞书、企业微信、钉钉、桌面通知、通用 HTTPS Webhook 或 HMAC 签名 Webhook：
 
 - `PermissionRequest`：编码代理有操作等待用户审批；
 - `UserPromptSubmit`：只在本机暂存本回合用户提问的脱敏摘要，不发送通知；
@@ -203,16 +203,37 @@ python3 scripts/configure.py validate
 python3 scripts/configure.py set-mention-all feishu-main on
 python3 scripts/configure.py set-mention-all feishu-main off
 python3 scripts/configure.py test --channel feishu-main
+python3 scripts/configure.py doctor
+python3 scripts/configure.py simulate --event permission_request --project production-api
+python3 scripts/configure.py status
 python3 scripts/configure.py remove feishu-main
 ```
 
-`test` 会真实发送测试消息。飞书渠道启用 `mention_all=true` 后，所有消息最后一行都会追加唯一的：
+`test` 会真实发送测试消息；`doctor` 检查配置和运行环境；`simulate` 只预览脱敏事件、规则命中的渠道和载荷，绝不发送；`status` 汇总本地脱敏日志。飞书渠道启用 `mention_all=true` 后，所有消息最后一行都会追加唯一的：
 
 ```text
 <at user_id="all">所有人</at>
 ```
 
 若飞书群限制只有群主或管理员可以 `@所有人`，机器人也需要相应权限。
+
+### 规则路由
+
+未配置 `rules` 时保持兼容行为：每个事件发送到所有启用渠道。配置规则后，插件合并所有匹配规则中的渠道；没有规则匹配时不发送。`events`、`projects` 和 `clients` 支持 `*` 通配符：
+
+```json
+{
+  "rules": [
+    {
+      "name": "production-permissions",
+      "events": ["permission_request"],
+      "projects": ["production-*"],
+      "clients": ["codex", "claude_code"],
+      "channels": ["feishu-main", "desktop-main"]
+    }
+  ]
+}
+```
 
 ### 飞书配置示例
 
@@ -255,6 +276,22 @@ python3 scripts/configure.py remove feishu-main
 ```
 
 公网 Webhook 必须使用 HTTPS。仅当 `delivery.allow_insecure_localhost=true` 时，测试环境才允许 localhost HTTP。插件不跟随 HTTP 重定向。
+
+### 钉钉、桌面和 HMAC Webhook
+
+钉钉使用官方群机器人地址并可选签名密钥；桌面渠道不需要 Webhook，在 macOS 使用 `osascript`，Linux 使用 `notify-send`；HMAC 渠道使用 `HMAC-SHA256(secret, timestamp + "." + exact_body)`，默认写入 `X-CX-Timestamp` 和 `X-CX-Signature`：
+
+```json
+{
+  "channels": [
+    {"name": "dingtalk-main", "type": "dingtalk", "webhook_env": "CX_NOTIFY_DINGTALK_WEBHOOK", "secret_env": "CX_NOTIFY_DINGTALK_SECRET"},
+    {"name": "desktop-main", "type": "desktop"},
+    {"name": "signed", "type": "hmac", "webhook_env": "CX_NOTIFY_HMAC_WEBHOOK", "secret_env": "CX_NOTIFY_HMAC_SECRET"}
+  ]
+}
+```
+
+Provider 通过统一适配器注册；飞书、企业微信和钉钉继续固定官方域名，通用与 HMAC Webhook 要求 HTTPS。
 
 ## 隐私与安全
 

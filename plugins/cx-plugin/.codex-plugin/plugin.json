@@ -1,7 +1,7 @@
 {
   "name": "cx-plugin",
-  "version": "0.3.0",
-  "description": "Send privacy-minimized Codex and Claude Code notifications to configured chat webhooks.",
+  "version": "0.5.0",
+  "description": "Route privacy-minimized Codex and Claude Code notifications to configurable providers.",
   "author": {
     "name": "GotoLu",
     "url": "https://github.com/GotoLu"
@@ -18,8 +18,8 @@
   ],
   "interface": {
     "displayName": "Codex / Claude Code Notifier",
-    "shortDescription": "Notify you when a coding agent needs permission or stops.",
-    "longDescription": "Sends privacy-minimized notifications to configured Feishu, WeCom, or generic HTTPS webhooks when Codex or Claude Code requests permission or ends the current response.",
+    "shortDescription": "Route coding-agent notifications to secure providers.",
+    "longDescription": "Routes privacy-minimized Codex and Claude Code events by event, project, and client to Feishu, WeCom, DingTalk, desktop, generic HTTPS, or HMAC-signed webhooks.",
     "developerName": "GotoLu",
     "category": "Productivity",
     "capabilities": [

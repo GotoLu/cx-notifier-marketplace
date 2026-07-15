@@ -7,8 +7,12 @@ import argparse
 import getpass
 import json
 import os
+import platform
+import shutil
 import sys
 import tempfile
+from collections import Counter
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -22,11 +26,17 @@ from cx_notify.config import (  # noqa: E402
     load_config,
     parse_config_json,
     resolve_config_path,
+    resolve_data_dir,
     write_config,
 )
 from cx_notify.limits import MAX_DELIVERY_BUDGET_SECONDS  # noqa: E402
 from cx_notify.runtime import deliver_event, make_test_event  # noqa: E402
-from cx_notify.providers import ProviderError, validate_webhook_url  # noqa: E402
+from cx_notify.providers import (  # noqa: E402
+    ProviderError,
+    preview_channel,
+    validate_channel,
+    validate_webhook_url,
+)
 
 
 def _load_raw(path: Path) -> dict[str, Any]:
@@ -90,17 +100,28 @@ def command_add(args: argparse.Namespace) -> int:
         "type": args.type,
         "enabled": True,
     }
-    if args.webhook_env:
-        channel["webhook_env"] = args.webhook_env
-    else:
-        channel["webhook_url"] = getpass.getpass("Webhook URL: ")
+    if args.type != "desktop":
+        if args.webhook_env:
+            channel["webhook_env"] = args.webhook_env
+        elif args.webhook_prompt:
+            channel["webhook_url"] = getpass.getpass("Webhook URL: ")
+        else:
+            print("a webhook source is required for this channel type", file=sys.stderr)
+            return 2
+    elif args.webhook_env or args.webhook_prompt:
+        print("desktop channels do not use a webhook", file=sys.stderr)
+        return 2
     if args.type == "feishu":
         if args.mention_all:
             channel["mention_all"] = True
+    if args.type in {"feishu", "dingtalk", "hmac"}:
         if args.secret_env:
             channel["secret_env"] = args.secret_env
         elif args.secret_prompt:
-            channel["secret"] = getpass.getpass("Feishu signing secret: ")
+            channel["secret"] = getpass.getpass("Signing secret: ")
+        elif args.type == "hmac":
+            print("hmac channels require --secret-env or --secret-prompt", file=sys.stderr)
+            return 2
     elif args.secret_env or args.secret_prompt or args.mention_all:
         if args.mention_all:
             print("--mention-all is only valid for feishu", file=sys.stderr)
@@ -114,6 +135,14 @@ def command_add(args: argparse.Namespace) -> int:
             channel["bearer_token"] = getpass.getpass("Bearer token: ")
     elif args.bearer_token_env or args.bearer_token_prompt:
         print("bearer token options are only valid for webhook", file=sys.stderr)
+        return 2
+    if args.type == "hmac":
+        if args.signature_header:
+            channel["signature_header"] = args.signature_header
+        if args.timestamp_header:
+            channel["timestamp_header"] = args.timestamp_header
+    elif args.signature_header or args.timestamp_header:
+        print("custom signature headers are only valid for hmac", file=sys.stderr)
         return 2
 
     direct_url = channel.get("webhook_url")
@@ -199,9 +228,8 @@ def command_validate(args: argparse.Namespace) -> int:
         return 2
     for channel in channels:
         try:
-            validate_webhook_url(
-                channel.webhook_url,
-                channel.type,
+            validate_channel(
+                channel,
                 allow_insecure_localhost=config.delivery.allow_insecure_localhost,
             )
         except ProviderError as exc:
@@ -221,6 +249,99 @@ def command_validate(args: argparse.Namespace) -> int:
         )
         return 2
     print(f"Configuration is valid: {config.path} ({len(config.channels)} channel(s))")
+    return 0
+
+
+def command_doctor(args: argparse.Namespace) -> int:
+    report: dict[str, Any] = {
+        "config": str(args.config),
+        "config_valid": False,
+        "channels": [],
+        "data_dir": None,
+        "issues": [],
+    }
+    try:
+        config = load_config(args.config)
+        report["config_valid"] = True
+        channels, diagnostics = config.resolve_channels(os.environ)
+        report["issues"].extend(diagnostics)
+        for channel in channels:
+            item = {"name": channel.name, "type": channel.type, "ready": True}
+            try:
+                validate_channel(
+                    channel,
+                    allow_insecure_localhost=config.delivery.allow_insecure_localhost,
+                )
+                if channel.type == "desktop":
+                    executable = "osascript" if platform.system() == "Darwin" else "notify-send"
+                    if shutil.which(executable) is None:
+                        item["ready"] = False
+                        report["issues"].append(f"desktop_unavailable:{channel.name}")
+            except ProviderError as exc:
+                item["ready"] = False
+                report["issues"].append(f"{channel.name}:{exc}")
+            report["channels"].append(item)
+        data_dir = resolve_data_dir(os.environ, config_path=config.path)
+        data_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
+        report["data_dir"] = str(data_dir)
+        report["rules"] = len(config.rules)
+    except (ConfigError, OSError) as exc:
+        report["issues"].append(str(exc))
+    print(json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True))
+    return 0 if report["config_valid"] and not report["issues"] else 2
+
+
+def command_simulate(args: argparse.Namespace) -> int:
+    config = load_config(args.config)
+    event = replace(
+        make_test_event(),
+        event=args.event,
+        client=args.client,
+        project_name=args.project,
+        title="模拟通知（不会发送）",
+    )
+    channels, diagnostics = config.resolve_channels(os.environ)
+    channels = config.route_channels(
+        channels,
+        event=event.event,
+        project=event.project_name,
+        project_id=event.project_id,
+        client=event.client,
+    )
+    output = {
+        "sent": False,
+        "event": event.payload(),
+        "matched_channels": [channel.name for channel in channels],
+        "previews": [preview_channel(channel, event) for channel in channels],
+        "diagnostics": list(diagnostics),
+    }
+    print(json.dumps(output, ensure_ascii=False, indent=2, sort_keys=True))
+    return 0
+
+
+def command_status(args: argparse.Namespace) -> int:
+    config = load_config(args.config)
+    log_path = resolve_data_dir(os.environ, config_path=config.path) / "events.log"
+    records: list[dict[str, Any]] = []
+    try:
+        lines = log_path.read_text(encoding="utf-8").splitlines()[-args.limit :]
+    except FileNotFoundError:
+        lines = []
+    for line in lines:
+        try:
+            value = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(value, dict):
+            records.append(value)
+    counts = Counter(str(record.get("code", "unknown")) for record in records)
+    output = {
+        "log": str(log_path),
+        "records": len(records),
+        "codes": dict(sorted(counts.items())),
+        "last": records[-1] if records else None,
+    }
+    print(json.dumps(output, ensure_ascii=False, indent=2, sort_keys=True))
     return 0
 
 
@@ -247,9 +368,13 @@ def build_parser() -> argparse.ArgumentParser:
     init_parser.set_defaults(handler=command_init)
 
     add_parser = subparsers.add_parser("add", help="Add one notification channel")
-    add_parser.add_argument("--type", choices=("feishu", "wecom", "webhook"), required=True)
+    add_parser.add_argument(
+        "--type",
+        choices=("desktop", "dingtalk", "feishu", "hmac", "wecom", "webhook"),
+        required=True,
+    )
     add_parser.add_argument("--name", required=True)
-    webhook = add_parser.add_mutually_exclusive_group(required=True)
+    webhook = add_parser.add_mutually_exclusive_group()
     webhook.add_argument("--webhook-env", help="Environment variable containing the webhook URL")
     webhook.add_argument(
         "--webhook-prompt",
@@ -275,6 +400,8 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Read a generic bearer token without echo",
     )
+    add_parser.add_argument("--signature-header", help="HMAC signature header name")
+    add_parser.add_argument("--timestamp-header", help="HMAC timestamp header name")
     add_parser.set_defaults(handler=command_add)
 
     remove_parser = subparsers.add_parser("remove", help="Remove a channel by name")
@@ -298,6 +425,23 @@ def build_parser() -> argparse.ArgumentParser:
     test_parser = subparsers.add_parser("test", help="Send a synthetic test notification")
     test_parser.add_argument("--channel", help="Only test the named channel")
     test_parser.set_defaults(handler=command_test)
+
+    doctor_parser = subparsers.add_parser("doctor", help="Diagnose configuration and runtime readiness")
+    doctor_parser.set_defaults(handler=command_doctor)
+
+    simulate_parser = subparsers.add_parser(
+        "simulate", help="Preview routing and sanitized provider payloads without sending"
+    )
+    simulate_parser.add_argument(
+        "--event", choices=("permission_request", "task_completed", "test"), default="test"
+    )
+    simulate_parser.add_argument("--client", choices=("codex", "claude_code"), default="codex")
+    simulate_parser.add_argument("--project", default="test")
+    simulate_parser.set_defaults(handler=command_simulate)
+
+    status_parser = subparsers.add_parser("status", help="Summarize sanitized recent delivery status")
+    status_parser.add_argument("--limit", type=int, choices=range(1, 501), default=100)
+    status_parser.set_defaults(handler=command_status)
     return parser
 
 

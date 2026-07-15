@@ -5,6 +5,7 @@ import sys
 import unittest
 from dataclasses import replace
 from pathlib import Path
+from unittest.mock import Mock, patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -15,7 +16,9 @@ from cx_notify.providers import (  # noqa: E402
     ProviderError,
     _provider_accepted,
     feishu_signature,
+    get_provider,
     prepare_request,
+    send_once,
     validate_webhook_url,
 )
 from cx_notify.runtime import make_test_event  # noqa: E402
@@ -81,6 +84,61 @@ class ProviderTests(unittest.TestCase):
         self.assertEqual(payload["msgtype"], "text")
         self.assertIn("请返回 Codex", payload["text"]["content"])
         self.assertNotIn('user_id="all"', payload["text"]["content"])
+
+    def test_dingtalk_payload_signature_and_host_pin(self) -> None:
+        channel = ResolvedChannel(
+            name="dingtalk",
+            type="dingtalk",
+            webhook_url="https://oapi.dingtalk.com/robot/send?access_token=example",
+            secret="secret",
+        )
+        with patch("cx_notify.providers.time.time", return_value=1700000000):
+            request = prepare_request(channel, self.event)
+        payload = json.loads(request.body)
+        self.assertEqual(payload["msgtype"], "text")
+        self.assertIn("timestamp=1700000000000", request.url)
+        self.assertIn("sign=", request.url)
+        with self.assertRaises(ProviderError):
+            validate_webhook_url("https://example.com/robot/send", "dingtalk")
+
+    def test_hmac_webhook_signs_timestamp_and_exact_body(self) -> None:
+        channel = ResolvedChannel(
+            name="signed",
+            type="hmac",
+            webhook_url="https://hooks.example.com/cx",
+            secret="signing-key",
+            signature_header="X-Custom-Signature",
+            timestamp_header="X-Custom-Timestamp",
+        )
+        with patch("cx_notify.providers.time.time", return_value=1700000000):
+            request = prepare_request(channel, self.event)
+        expected = __import__("hmac").new(
+            b"signing-key",
+            b"1700000000." + request.body,
+            __import__("hashlib").sha256,
+        ).hexdigest()
+        self.assertEqual(request.headers["X-Custom-Timestamp"], "1700000000")
+        self.assertEqual(request.headers["X-Custom-Signature"], f"sha256={expected}")
+        self.assertNotIn("signing-key", request.body.decode("utf-8"))
+
+    def test_desktop_provider_uses_argument_vector_without_shell(self) -> None:
+        channel = ResolvedChannel(name="desktop", type="desktop", webhook_url=None)
+        completed = Mock(returncode=0)
+        with (
+            patch("cx_notify.providers.platform.system", return_value="Linux"),
+            patch("cx_notify.providers.shutil.which", return_value="/usr/bin/notify-send"),
+            patch("cx_notify.providers.subprocess.run", return_value=completed) as run,
+        ):
+            result = send_once(channel, self.event, timeout_seconds=1.0)
+        self.assertTrue(result.success)
+        command = run.call_args.args[0]
+        self.assertEqual(command[0], "notify-send")
+        self.assertNotIsInstance(command, str)
+        self.assertNotIn("shell", run.call_args.kwargs)
+
+    def test_provider_registry_exposes_all_supported_types(self) -> None:
+        for channel_type in ("desktop", "dingtalk", "feishu", "hmac", "wecom", "webhook"):
+            self.assertEqual(get_provider(channel_type).channel_type, channel_type)
 
     def test_generic_payload_is_canonical_and_bearer_is_header_only(self) -> None:
         channel = ResolvedChannel(

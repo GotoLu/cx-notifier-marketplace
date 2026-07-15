@@ -93,6 +93,38 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual(second["deduplicated"], 1)
         self.assertEqual(len(calls), 1)
 
+    def test_rules_filter_delivery_before_concurrent_dispatch(self) -> None:
+        data = default_config()
+        data["channels"] = [
+            {"name": "matched", "type": "desktop", "enabled": True},
+            {"name": "filtered", "type": "desktop", "enabled": True},
+        ]
+        data["rules"] = [
+            {
+                "name": "permission-project",
+                "events": ["permission_request"],
+                "projects": ["project"],
+                "clients": ["codex"],
+                "channels": ["matched"],
+            }
+        ]
+        write_config(data, self.config_path)
+        calls: list[str] = []
+
+        def transport(channel, event, **kwargs):
+            calls.append(channel.name)
+            return DeliveryResult(True, False, 0, "accepted")
+
+        summary = run_hook(
+            self.hook_input,
+            environ=self.environment,
+            config_path=self.config_path,
+            transport=transport,
+        )
+        self.assertEqual(calls, ["matched"])
+        self.assertEqual(summary["sent"], 1)
+        self.assertEqual(summary["skipped"], 1)
+
     def test_retry_reuses_notification_id(self) -> None:
         calls: list[str] = []
 

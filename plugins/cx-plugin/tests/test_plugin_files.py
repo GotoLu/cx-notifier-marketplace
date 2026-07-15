@@ -12,7 +12,7 @@ class PluginFileTests(unittest.TestCase):
     def test_manifest_and_default_hook_discovery(self) -> None:
         manifest = json.loads((ROOT / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8"))
         self.assertEqual(manifest["name"], ROOT.name)
-        self.assertEqual(manifest["version"].split("+", 1)[0], "0.3.0")
+        self.assertEqual(manifest["version"].split("+", 1)[0], "0.5.0")
         self.assertNotIn("hooks", manifest)
         self.assertNotIn("apps", manifest)
         self.assertNotIn("mcpServers", manifest)

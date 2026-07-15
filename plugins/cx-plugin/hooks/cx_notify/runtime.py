@@ -139,12 +139,28 @@ def deliver_event(
             event=event.event,
             notification_id=event.notification_id,
         )
+    routed_out = 0
     if channel_filter:
         channels = tuple(channel for channel in channels if channel.name == channel_filter)
-    summary = {"sent": 0, "failed": 0, "deduplicated": 0, "skipped": len(diagnostics)}
+    else:
+        available_count = len(channels)
+        channels = config.route_channels(
+            channels,
+            event=event.event,
+            project=event.project_name,
+            project_id=event.project_id,
+            client=event.client,
+        )
+        routed_out = available_count - len(channels)
+    summary = {
+        "sent": 0,
+        "failed": 0,
+        "deduplicated": 0,
+        "skipped": len(diagnostics) + routed_out,
+    }
     if not channels:
         logger.write(
-            "no_channels_available",
+            "no_route_match" if config.rules and not channel_filter else "no_channels_available",
             event=event.event,
             notification_id=event.notification_id,
         )

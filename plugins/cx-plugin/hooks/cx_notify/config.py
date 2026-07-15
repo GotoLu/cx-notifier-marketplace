@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import stat
 import tempfile
 from dataclasses import dataclass
+from fnmatch import fnmatchcase
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -15,8 +17,8 @@ from .limits import MAX_DELIVERY_BUDGET_SECONDS
 
 CONFIG_VERSION = 1
 DEFAULT_CONFIG_PATH = Path("~/.config/cx-plugin/config.json").expanduser()
-_CHANNEL_TYPES = {"feishu", "wecom", "webhook"}
-_TOP_LEVEL_KEYS = {"version", "channels", "privacy", "delivery"}
+_CHANNEL_TYPES = {"desktop", "dingtalk", "feishu", "hmac", "wecom", "webhook"}
+_TOP_LEVEL_KEYS = {"version", "channels", "rules", "privacy", "delivery"}
 _COMMON_CHANNEL_KEYS = {
     "name",
     "type",
@@ -28,7 +30,11 @@ _TYPE_CHANNEL_KEYS = {
     "feishu": {"secret", "secret_env", "mention_all"},
     "wecom": set(),
     "webhook": {"bearer_token", "bearer_token_env"},
+    "dingtalk": {"secret", "secret_env"},
+    "hmac": {"secret", "secret_env", "signature_header", "timestamp_header"},
+    "desktop": set(),
 }
+_HTTP_HEADER_NAME = re.compile(r"^[!#$%&'*+.^_`|~0-9A-Za-z-]+$")
 
 
 class ConfigError(ValueError):
@@ -76,6 +82,8 @@ class ChannelConfig:
     mention_all: bool = False
     bearer_token: str | None = None
     bearer_token_env: str | None = None
+    signature_header: str = "X-CX-Signature"
+    timestamp_header: str = "X-CX-Timestamp"
 
     @property
     def contains_inline_secret(self) -> bool:
@@ -86,10 +94,32 @@ class ChannelConfig:
 class ResolvedChannel:
     name: str
     type: str
-    webhook_url: str
+    webhook_url: str | None
     secret: str | None = None
     mention_all: bool = False
     bearer_token: str | None = None
+    signature_header: str = "X-CX-Signature"
+    timestamp_header: str = "X-CX-Timestamp"
+
+
+@dataclass(frozen=True)
+class RoutingRule:
+    name: str
+    events: tuple[str, ...] = ("*",)
+    projects: tuple[str, ...] = ("*",)
+    clients: tuple[str, ...] = ("*",)
+    channels: tuple[str, ...] = ()
+    enabled: bool = True
+
+    def matches(self, *, event: str, project: str, project_id: str, client: str) -> bool:
+        return (
+            any(fnmatchcase(event, pattern) for pattern in self.events)
+            and any(
+                fnmatchcase(project, pattern) or fnmatchcase(project_id, pattern)
+                for pattern in self.projects
+            )
+            and any(fnmatchcase(client, pattern) for pattern in self.clients)
+        )
 
 
 @dataclass(frozen=True)
@@ -98,6 +128,7 @@ class PluginConfig:
     channels: tuple[ChannelConfig, ...]
     privacy: PrivacyConfig
     delivery: DeliveryConfig
+    rules: tuple[RoutingRule, ...] = ()
 
     def resolve_channels(
         self, environ: Mapping[str, str] | None = None
@@ -111,7 +142,7 @@ class PluginConfig:
             webhook_url = channel.webhook_url
             if channel.webhook_env:
                 webhook_url = environment.get(channel.webhook_env)
-            if not webhook_url:
+            if channel.type != "desktop" and not webhook_url:
                 diagnostics.append(f"channel_unconfigured:{channel.name}")
                 continue
             secret = channel.secret
@@ -134,15 +165,42 @@ class PluginConfig:
                     secret=secret,
                     mention_all=channel.mention_all,
                     bearer_token=bearer_token,
+                    signature_header=channel.signature_header,
+                    timestamp_header=channel.timestamp_header,
                 )
             )
         return tuple(resolved), tuple(diagnostics)
+
+    def route_channels(
+        self,
+        channels: tuple[ResolvedChannel, ...],
+        *,
+        event: str,
+        project: str,
+        project_id: str,
+        client: str,
+    ) -> tuple[ResolvedChannel, ...]:
+        """Return the union of channels selected by every matching enabled rule."""
+
+        if not self.rules:
+            return channels
+        selected: set[str] = set()
+        for rule in self.rules:
+            if rule.enabled and rule.matches(
+                event=event,
+                project=project,
+                project_id=project_id,
+                client=client,
+            ):
+                selected.update(rule.channels)
+        return tuple(channel for channel in channels if channel.name in selected)
 
 
 def default_config() -> dict[str, Any]:
     return {
         "version": CONFIG_VERSION,
         "channels": [],
+        "rules": [],
         "privacy": {
             "project_name": "basename",
             "include_permission_description": False,
@@ -209,10 +267,15 @@ def _parse_channel(raw: Any, seen_names: set[str]) -> ChannelConfig:
     if not isinstance(enabled, bool):
         raise ConfigError(f"enabled must be boolean for channel {name}")
     _exclusive_pair(item, "webhook_url", "webhook_env", name)
-    if not item.get("webhook_url") and not item.get("webhook_env"):
+    if channel_type != "desktop" and not item.get("webhook_url") and not item.get("webhook_env"):
         raise ConfigError(f"channel {name} requires webhook_url or webhook_env")
-    if channel_type == "feishu":
+    if channel_type == "desktop" and (item.get("webhook_url") or item.get("webhook_env")):
+        raise ConfigError(f"desktop channel {name} must not configure a webhook")
+    if channel_type in {"feishu", "dingtalk", "hmac"}:
         _exclusive_pair(item, "secret", "secret_env", name)
+    if channel_type == "hmac" and not item.get("secret") and not item.get("secret_env"):
+        raise ConfigError(f"hmac channel {name} requires secret or secret_env")
+    if channel_type == "feishu":
         mention_all = item.get("mention_all", False)
         if not isinstance(mention_all, bool):
             raise ConfigError(f"mention_all must be boolean for channel {name}")
@@ -227,10 +290,18 @@ def _parse_channel(raw: Any, seen_names: set[str]) -> ChannelConfig:
         "secret_env",
         "bearer_token",
         "bearer_token_env",
+        "signature_header",
+        "timestamp_header",
     )
     for field in string_fields:
         if field in item and (not isinstance(item[field], str) or not item[field].strip()):
             raise ConfigError(f"{field} must be a non-empty string for channel {name}")
+    for field in ("signature_header", "timestamp_header"):
+        value = item.get(field)
+        if value is not None and (
+            not isinstance(value, str) or not _HTTP_HEADER_NAME.fullmatch(value)
+        ):
+            raise ConfigError(f"{field} must be a valid HTTP header name for channel {name}")
     return ChannelConfig(
         name=name,
         type=channel_type,
@@ -242,6 +313,55 @@ def _parse_channel(raw: Any, seen_names: set[str]) -> ChannelConfig:
         mention_all=mention_all,
         bearer_token=item.get("bearer_token"),
         bearer_token_env=item.get("bearer_token_env"),
+        signature_header=item.get("signature_header", "X-CX-Signature"),
+        timestamp_header=item.get("timestamp_header", "X-CX-Timestamp"),
+    )
+
+
+def _string_patterns(raw: Any, label: str) -> tuple[str, ...]:
+    if raw is None:
+        return ("*",)
+    if not isinstance(raw, list) or not raw or len(raw) > 32:
+        raise ConfigError(f"{label} must be a non-empty array with at most 32 items")
+    values: list[str] = []
+    for value in raw:
+        if not isinstance(value, str) or not value.strip() or len(value) > 128:
+            raise ConfigError(f"{label} entries must be non-empty strings up to 128 characters")
+        values.append(value.strip())
+    return tuple(values)
+
+
+def _parse_rule(raw: Any, seen_names: set[str], channel_names: set[str]) -> RoutingRule:
+    item = _expect_mapping(raw, "rule")
+    unknown = set(item) - {"name", "enabled", "events", "projects", "clients", "channels"}
+    if unknown:
+        raise ConfigError(f"unknown rule keys: {sorted(unknown)}")
+    name = item.get("name")
+    if not isinstance(name, str) or not name.strip() or len(name) > 64:
+        raise ConfigError("rule name must be a non-empty string up to 64 characters")
+    name = name.strip()
+    if name in seen_names:
+        raise ConfigError(f"duplicate rule name: {name}")
+    seen_names.add(name)
+    enabled = item.get("enabled", True)
+    if not isinstance(enabled, bool):
+        raise ConfigError(f"enabled must be boolean for rule {name}")
+    raw_channels = item.get("channels")
+    if not isinstance(raw_channels, list) or not raw_channels or len(raw_channels) > 16:
+        raise ConfigError(f"channels for rule {name} must be a non-empty array")
+    channels: list[str] = []
+    for channel in raw_channels:
+        if not isinstance(channel, str) or channel not in channel_names:
+            raise ConfigError(f"rule {name} references unknown channel: {channel!r}")
+        if channel not in channels:
+            channels.append(channel)
+    return RoutingRule(
+        name=name,
+        enabled=enabled,
+        events=_string_patterns(item.get("events"), f"events for rule {name}"),
+        projects=_string_patterns(item.get("projects"), f"projects for rule {name}"),
+        clients=_string_patterns(item.get("clients"), f"clients for rule {name}"),
+        channels=tuple(channels),
     )
 
 
@@ -336,6 +456,12 @@ def load_config(
         raise ConfigError("channels must be an array with at most 16 items")
     seen_names: set[str] = set()
     channels = tuple(_parse_channel(item, seen_names) for item in raw_channels)
+    raw_rules = root.get("rules", [])
+    if not isinstance(raw_rules, list) or len(raw_rules) > 64:
+        raise ConfigError("rules must be an array with at most 64 items")
+    seen_rules: set[str] = set()
+    channel_names = {channel.name for channel in channels}
+    rules = tuple(_parse_rule(item, seen_rules, channel_names) for item in raw_rules)
     if any(channel.contains_inline_secret for channel in channels) and not _permissions_are_private(
         config_path
     ):
@@ -345,6 +471,7 @@ def load_config(
         channels=channels,
         privacy=_parse_privacy(root.get("privacy", {})),
         delivery=_parse_delivery(root.get("delivery", {})),
+        rules=rules,
     )
 
 

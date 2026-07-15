@@ -15,6 +15,7 @@ sys.path.insert(0, str(ROOT / "hooks"))
 
 from cx_notify.config import (  # noqa: E402
     ConfigError,
+    ResolvedChannel,
     default_config,
     load_config,
     resolve_data_dir,
@@ -37,6 +38,71 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(config.delivery.timeout_seconds, 1.5)
         if os.name != "nt":
             self.assertEqual(stat.S_IMODE(self.path.stat().st_mode), 0o600)
+
+    def test_rules_route_by_event_project_and_client(self) -> None:
+        data = default_config()
+        data["channels"] = [
+            {"name": "urgent", "type": "desktop", "enabled": True},
+            {"name": "normal", "type": "desktop", "enabled": True},
+        ]
+        data["rules"] = [
+            {
+                "name": "codex-production-permission",
+                "events": ["permission_*"],
+                "projects": ["prod-*"],
+                "clients": ["codex"],
+                "channels": ["urgent"],
+            },
+            {
+                "name": "completion",
+                "events": ["task_completed"],
+                "channels": ["normal"],
+            },
+        ]
+        write_config(data, self.path)
+        config = load_config(self.path)
+        channels, diagnostics = config.resolve_channels({})
+        self.assertEqual(diagnostics, ())
+        routed = config.route_channels(
+            channels,
+            event="permission_request",
+            project="prod-api",
+            project_id="sha256:project",
+            client="codex",
+        )
+        self.assertEqual([channel.name for channel in routed], ["urgent"])
+        self.assertEqual(
+            config.route_channels(
+                channels,
+                event="permission_request",
+                project="dev-api",
+                project_id="sha256:project",
+                client="codex",
+            ),
+            (),
+        )
+
+    def test_rules_reject_unknown_channels_and_hmac_header_injection(self) -> None:
+        data = default_config()
+        data["channels"] = [{"name": "desktop", "type": "desktop"}]
+        data["rules"] = [{"name": "bad", "channels": ["missing"]}]
+        write_config(data, self.path)
+        with self.assertRaisesRegex(ConfigError, "unknown channel"):
+            load_config(self.path)
+
+        data = default_config()
+        data["channels"] = [
+            {
+                "name": "signed",
+                "type": "hmac",
+                "webhook_env": "HOOK",
+                "secret_env": "SECRET",
+                "signature_header": "X-Good\nInjected",
+            }
+        ]
+        write_config(data, self.path)
+        with self.assertRaisesRegex(ConfigError, "valid HTTP header"):
+            load_config(self.path)
 
     def test_claude_plugin_data_directory_is_supported(self) -> None:
         claude_data = Path(self.temporary.name) / "claude-data"
@@ -206,6 +272,29 @@ class ConfigTests(unittest.TestCase):
         if os.name != "nt":
             self.assertEqual(stat.S_IMODE(self.path.stat().st_mode), 0o600)
 
+    def test_cli_doctor_simulate_and_status(self) -> None:
+        script = ROOT / "scripts" / "configure.py"
+        data = default_config()
+        data["channels"] = [{"name": "desktop", "type": "desktop", "enabled": True}]
+        data["rules"] = [{"name": "all", "channels": ["desktop"]}]
+        write_config(data, self.path)
+        for command in (("simulate",), ("status",)):
+            completed = subprocess.run(
+                [sys.executable, "-B", str(script), "--config", str(self.path), *command],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=False,
+                timeout=5,
+                text=True,
+            )
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            if command[0] == "simulate":
+                self.assertFalse(payload["sent"])
+                self.assertEqual(payload["matched_channels"], ["desktop"])
+            else:
+                self.assertIn("codes", payload)
+
     def test_cli_rejects_prompted_insecure_url_without_persisting_it(self) -> None:
         script = ROOT / "scripts" / "configure.py"
         subprocess.run(
@@ -285,7 +374,8 @@ class ConfigTests(unittest.TestCase):
         example = ROOT / "config.example.json"
         json.loads(example.read_text(encoding="utf-8"))
         config = load_config(example)
-        self.assertEqual(len(config.channels), 3)
+        self.assertEqual(len(config.channels), 6)
+        self.assertEqual(len(config.rules), 2)
 
 
 if __name__ == "__main__":

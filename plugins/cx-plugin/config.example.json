@@ -32,6 +32,39 @@
       "enabled": false,
       "webhook_env": "CX_NOTIFY_WEBHOOK_URL",
       "bearer_token_env": "CX_NOTIFY_WEBHOOK_BEARER_TOKEN"
+    },
+    {
+      "name": "dingtalk-main",
+      "type": "dingtalk",
+      "enabled": false,
+      "webhook_env": "CX_NOTIFY_DINGTALK_WEBHOOK",
+      "secret_env": "CX_NOTIFY_DINGTALK_SECRET"
+    },
+    {
+      "name": "desktop-main",
+      "type": "desktop",
+      "enabled": false
+    },
+    {
+      "name": "signed-webhook",
+      "type": "hmac",
+      "enabled": false,
+      "webhook_env": "CX_NOTIFY_HMAC_WEBHOOK",
+      "secret_env": "CX_NOTIFY_HMAC_SECRET"
+    }
+  ],
+  "rules": [
+    {
+      "name": "production-permissions",
+      "events": ["permission_request"],
+      "projects": ["production-*"],
+      "clients": ["codex", "claude_code"],
+      "channels": ["feishu-main", "desktop-main"]
+    },
+    {
+      "name": "task-completions",
+      "events": ["task_completed"],
+      "channels": ["webhook-main"]
     }
   ]
 }
