@@ -1,8 +1,8 @@
 {
   "name": "cx-plugin",
-  "displayName": "CX Notifier",
+  "displayName": "CX Notifier｜牛马呼叫器",
   "version": "0.5.2",
-  "description": "Stop babysitting your terminal. Get notified when Codex or Claude Code needs you.",
+  "description": "The human pager for Codex and Claude Code—get called back when the agent needs you.",
   "author": {
     "name": "GotoLu",
     "url": "https://github.com/GotoLu"
