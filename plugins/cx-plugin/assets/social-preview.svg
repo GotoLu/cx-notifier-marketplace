@@ -11,6 +11,14 @@
       <stop stop-color="#67E8F9"/>
       <stop offset="1" stop-color="#2DD4BF"/>
     </linearGradient>
+    <linearGradient id="iconBg" x1="48" y1="24" x2="464" y2="488" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#10263B"/>
+      <stop offset="1" stop-color="#07111F"/>
+    </linearGradient>
+    <linearGradient id="iconAccent" x1="122" y1="148" x2="394" y2="382" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#67E8F9"/>
+      <stop offset="1" stop-color="#2DD4BF"/>
+    </linearGradient>
     <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
       <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#020617" flood-opacity="0.5"/>
     </filter>
@@ -19,11 +27,25 @@
   <circle cx="1160" cy="30" r="250" fill="#2DD4BF" opacity="0.08"/>
   <circle cx="36" cy="640" r="260" fill="#60A5FA" opacity="0.07"/>
   <g font-family="Inter, 'PingFang SC', 'Microsoft YaHei', ui-sans-serif, sans-serif">
-    <g transform="translate(72 66)">
-      <rect width="74" height="74" rx="20" fill="#102F42" stroke="#2DD4BF" stroke-width="3"/>
-      <path d="m19 26 13 11-13 11M39 49h16" fill="none" stroke="#67E8F9" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M53 17c-8 0-14 6-14 14v8l-5 7h38l-5-7v-8c0-8-6-14-14-14Z" fill="#2DD4BF" opacity="0.9"/>
-      <circle cx="67" cy="20" r="7" fill="#FBBF24"/>
+    <g transform="translate(72 66) scale(0.14453125)">
+      <rect width="512" height="512" rx="112" fill="url(#iconBg)"/>
+      <circle cx="410" cy="102" r="42" fill="#FBBF24" opacity="0.14"/>
+      <circle cx="95" cy="405" r="70" fill="#2DD4BF" opacity="0.08"/>
+      <g>
+        <rect x="76" y="106" width="360" height="282" rx="34" fill="#0B1828" stroke="#274158" stroke-width="8"/>
+        <path d="M76 154c0-26.51 21.49-48 48-48h264c26.51 0 48 21.49 48 48v26H76v-26Z" fill="#13283D"/>
+        <circle cx="120" cy="143" r="9" fill="#FB7185"/>
+        <circle cx="151" cy="143" r="9" fill="#FBBF24"/>
+        <circle cx="182" cy="143" r="9" fill="#34D399"/>
+        <path d="m124 238 48 42-48 42" fill="none" stroke="url(#iconAccent)" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M199 324h82" fill="none" stroke="#A5F3FC" stroke-width="22" stroke-linecap="round"/>
+      </g>
+      <g transform="translate(298 238)">
+        <circle cx="80" cy="80" r="82" fill="#123147" stroke="#2DD4BF" stroke-width="8"/>
+        <path d="M80 31c-25.96 0-47 21.04-47 47v29l-16 22h126l-16-22V78c0-25.96-21.04-47-47-47Z" fill="url(#iconAccent)"/>
+        <path d="M61 140h38c-2.52 11.98-10.1 19-19 19s-16.48-7.02-19-19Z" fill="#F0FDFA"/>
+        <circle cx="126" cy="35" r="22" fill="#FBBF24" stroke="#07111F" stroke-width="8"/>
+      </g>
     </g>
     <text x="170" y="119" fill="#E2E8F0" font-size="34" font-weight="720">CX Notifier</text>
     <text x="72" y="256" fill="#F8FAFC" font-size="76" font-weight="780">牛马</text>
