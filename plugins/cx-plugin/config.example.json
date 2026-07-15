@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "privacy": {
+    "project_name": "basename",
+    "include_permission_description": false
+  },
+  "delivery": {
+    "timeout_seconds": 1.5,
+    "max_attempts": 2,
+    "backoff_seconds": 0.2,
+    "dedupe_ttl_seconds": 604800,
+    "allow_insecure_localhost": false
+  },
+  "channels": [
+    {
+      "name": "feishu-main",
+      "type": "feishu",
+      "enabled": false,
+      "mention_all": false,
+      "webhook_env": "CX_NOTIFY_FEISHU_WEBHOOK",
+      "secret_env": "CX_NOTIFY_FEISHU_SECRET"
+    },
+    {
+      "name": "wecom-main",
+      "type": "wecom",
+      "enabled": false,
+      "webhook_env": "CX_NOTIFY_WECOM_WEBHOOK"
+    },
+    {
+      "name": "webhook-main",
+      "type": "webhook",
+      "enabled": false,
+      "webhook_env": "CX_NOTIFY_WEBHOOK_URL",
+      "bearer_token_env": "CX_NOTIFY_WEBHOOK_BEARER_TOKEN"
+    }
+  ]
+}

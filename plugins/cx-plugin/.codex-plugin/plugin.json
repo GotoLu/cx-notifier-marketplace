@@ -1,0 +1,31 @@
+{
+  "name": "cx-plugin",
+  "version": "0.1.0",
+  "description": "Send privacy-minimized Codex permission and task-ending notifications to configured chat webhooks.",
+  "author": {
+    "name": "GotoLu",
+    "url": "https://github.com/GotoLu"
+  },
+  "homepage": "https://github.com/GotoLu/cx-notifier-marketplace",
+  "repository": "https://github.com/GotoLu/cx-notifier-marketplace",
+  "license": "MIT",
+  "keywords": [
+    "codex",
+    "notifications",
+    "approvals",
+    "webhooks"
+  ],
+  "interface": {
+    "displayName": "Codex Notifier",
+    "shortDescription": "Notify you when Codex needs permission or ends a task.",
+    "longDescription": "Sends privacy-minimized notifications to configured Feishu, WeCom, or generic HTTPS webhooks when Codex requests permission or ends the current response.",
+    "developerName": "GotoLu",
+    "category": "Productivity",
+    "capabilities": [
+      "Notifications"
+    ],
+    "defaultPrompt": [
+      "Help me configure Codex notifications."
+    ]
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "cx-notifier",
+  "interface": {
+    "displayName": "Codex Notifier"
+  },
+  "plugins": [
+    {
+      "name": "cx-plugin",
+      "source": {
+        "source": "local",
+        "path": "./plugins/cx-plugin"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
