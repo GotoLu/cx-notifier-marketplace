@@ -66,6 +66,23 @@ Claude Code 和 Codex 会从同一个 `hooks/hooks.json` 注册 `PermissionReque
 
 安装或更新后运行 `/reload-plugins`，或启动新会话；再通过 `/hooks` 确认三类 Hook 已注册。
 
+### Claude Code 升级已有安装
+
+重新打开会话不会自动刷新 GitHub marketplace。升级已有安装时执行：
+
+```bash
+claude plugin marketplace update cx-notifier
+claude plugin update cx-plugin@cx-notifier
+```
+
+更新命令提示成功后，需要完全退出并重新启动 Claude Code。然后运行：
+
+```bash
+claude plugin details cx-plugin@cx-notifier
+```
+
+`0.3.0` 应显示三个 Hooks：`PermissionRequest`、`UserPromptSubmit`、`Stop`。`UserPromptSubmit` 不会单独发送飞书消息，它只在本地记录提问；对应的 `Stop` 通知会显示“提问：…”。如果仍显示 `0.2.0`，说明 marketplace 尚未刷新。
+
 ## 飞书机器人配置（从零开始）
 
 ### 1. 在飞书群中创建自定义机器人

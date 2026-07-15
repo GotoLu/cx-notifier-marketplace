@@ -20,6 +20,15 @@ claude plugin install cx-plugin@cx-notifier
 
 安装后运行 `/reload-plugins` 或新建 Claude Code 会话。具体配置见 [插件说明](plugins/cx-plugin/README.md)。
 
+已经安装旧版本时，Claude Code 不会因为重新打开会话而自动刷新 GitHub marketplace。请先更新 marketplace，再更新插件，并完全退出后重新启动 Claude Code：
+
+```bash
+claude plugin marketplace update cx-notifier
+claude plugin update cx-plugin@cx-notifier
+```
+
+可用 `claude plugin details cx-plugin@cx-notifier` 确认版本和 Hook 列表；`0.3.0` 应显示 `PermissionRequest`、`UserPromptSubmit` 和 `Stop`。其中 `UserPromptSubmit` 只在本地记录提问，不会单独发送通知；提问内容会随之后的 `Stop` 通知发送。
+
 ## 飞书机器人快速配置
 
 1. 在接收通知的飞书群中打开“群设置” → “群机器人” → “添加机器人” → “自定义机器人”。
