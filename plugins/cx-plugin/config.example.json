@@ -1,5 +1,6 @@
 {
   "version": 1,
+  "paused": false,
   "privacy": {
     "project_name": "basename",
     "include_permission_description": false

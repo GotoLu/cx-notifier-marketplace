@@ -228,6 +228,10 @@ def run_hook(
         logger.write("config_error")
         return {"sent": 0, "failed": 0, "deduplicated": 0, "skipped": 1}
 
+    if config.paused:
+        logger.write("paused", event=str(data.get("hook_event_name") or "unknown"))
+        return {"sent": 0, "failed": 0, "deduplicated": 0, "skipped": 1}
+
     hook_name = data.get("hook_event_name")
     question: QuestionContext | None = None
     session_id = data.get("session_id")

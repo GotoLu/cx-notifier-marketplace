@@ -4,6 +4,11 @@
 
 - Recommend Claude Code's official per-marketplace auto-update flow and keep the one-line manual update command for troubleshooting.
 
+## 0.5.1 - 2026-07-15
+
+- Add an idempotent `scripts/pause.py` command with pause, resume, and status modes.
+- Skip all Hook context capture and provider delivery while the plugin is paused.
+
 ## 0.5.0 - 2026-07-15
 
 - Introduce a provider adapter registry while preserving the existing provider API.

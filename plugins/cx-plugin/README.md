@@ -206,10 +206,13 @@ python3 scripts/configure.py test --channel feishu-main
 python3 scripts/configure.py doctor
 python3 scripts/configure.py simulate --event permission_request --project production-api
 python3 scripts/configure.py status
+python3 scripts/pause.py
+python3 scripts/pause.py --status
+python3 scripts/pause.py --resume
 python3 scripts/configure.py remove feishu-main
 ```
 
-`test` 会真实发送测试消息；`doctor` 检查配置和运行环境；`simulate` 只预览脱敏事件、规则命中的渠道和载荷，绝不发送；`status` 汇总本地脱敏日志。飞书渠道启用 `mention_all=true` 后，所有消息最后一行都会追加唯一的：
+`test` 会真实发送测试消息；`doctor` 检查配置和运行环境；`simulate` 只预览脱敏事件、规则命中的渠道和载荷，绝不发送；`status` 汇总本地脱敏日志。`pause.py` 默认暂停全部推送，`--resume` 恢复，且不会改变任何渠道原有的 `enabled` 状态。飞书渠道启用 `mention_all=true` 后，所有消息最后一行都会追加唯一的：
 
 ```text
 <at user_id="all">所有人</at>

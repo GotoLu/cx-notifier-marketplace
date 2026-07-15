@@ -1,7 +1,7 @@
 {
   "name": "cx-plugin",
   "displayName": "Codex / Claude Code Notifier",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Route privacy-minimized permission and completion notifications to configurable providers.",
   "author": {
     "name": "GotoLu",

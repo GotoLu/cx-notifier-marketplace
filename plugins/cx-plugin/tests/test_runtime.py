@@ -125,6 +125,31 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual(summary["sent"], 1)
         self.assertEqual(summary["skipped"], 1)
 
+    def test_paused_config_skips_all_hook_processing(self) -> None:
+        data = default_config()
+        data["paused"] = True
+        data["channels"] = [
+            {"name": "primary", "type": "webhook", "webhook_env": "TEST_WEBHOOK"}
+        ]
+        write_config(data, self.config_path)
+        calls = 0
+
+        def transport(channel, event, **kwargs):
+            nonlocal calls
+            calls += 1
+            return DeliveryResult(True, False, 200, "accepted")
+
+        summary = run_hook(
+            self.hook_input,
+            environ=self.environment,
+            config_path=self.config_path,
+            transport=transport,
+        )
+        self.assertEqual(summary, {"sent": 0, "failed": 0, "deduplicated": 0, "skipped": 1})
+        self.assertEqual(calls, 0)
+        log = (self.data_dir / "events.log").read_text(encoding="utf-8")
+        self.assertIn('"code":"paused"', log)
+
     def test_retry_reuses_notification_id(self) -> None:
         calls: list[str] = []
 

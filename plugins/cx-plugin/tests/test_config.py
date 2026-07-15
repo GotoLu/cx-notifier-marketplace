@@ -35,6 +35,7 @@ class ConfigTests(unittest.TestCase):
         write_config(default_config(), self.path)
         config = load_config(self.path)
         self.assertEqual(config.channels, ())
+        self.assertFalse(config.paused)
         self.assertEqual(config.delivery.timeout_seconds, 1.5)
         if os.name != "nt":
             self.assertEqual(stat.S_IMODE(self.path.stat().st_mode), 0o600)
@@ -103,6 +104,36 @@ class ConfigTests(unittest.TestCase):
         write_config(data, self.path)
         with self.assertRaisesRegex(ConfigError, "valid HTTP header"):
             load_config(self.path)
+
+    def test_paused_is_type_strict_and_pause_script_is_reversible(self) -> None:
+        invalid = default_config()
+        invalid["paused"] = "yes"
+        write_config(invalid, self.path)
+        with self.assertRaisesRegex(ConfigError, "paused must be boolean"):
+            load_config(self.path)
+
+        write_config(default_config(), self.path)
+        script = ROOT / "scripts" / "pause.py"
+        commands = ((), ("--status",), (), ("--resume",), ("--status",), ("--resume",))
+        outputs: list[str] = []
+        for command in commands:
+            completed = subprocess.run(
+                [sys.executable, "-B", str(script), "--config", str(self.path), *command],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=False,
+                timeout=5,
+                text=True,
+            )
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            outputs.append(completed.stdout.strip())
+        self.assertEqual(outputs[0], "Notifications paused.")
+        self.assertEqual(outputs[1], "paused")
+        self.assertEqual(outputs[2], "Notifications already paused.")
+        self.assertEqual(outputs[3], "Notifications resumed.")
+        self.assertEqual(outputs[4], "running")
+        self.assertEqual(outputs[5], "Notifications already running.")
+        self.assertFalse(load_config(self.path).paused)
 
     def test_claude_plugin_data_directory_is_supported(self) -> None:
         claude_data = Path(self.temporary.name) / "claude-data"

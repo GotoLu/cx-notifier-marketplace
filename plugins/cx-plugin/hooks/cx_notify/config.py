@@ -18,7 +18,7 @@ from .limits import MAX_DELIVERY_BUDGET_SECONDS
 CONFIG_VERSION = 1
 DEFAULT_CONFIG_PATH = Path("~/.config/cx-plugin/config.json").expanduser()
 _CHANNEL_TYPES = {"desktop", "dingtalk", "feishu", "hmac", "wecom", "webhook"}
-_TOP_LEVEL_KEYS = {"version", "channels", "rules", "privacy", "delivery"}
+_TOP_LEVEL_KEYS = {"version", "paused", "channels", "rules", "privacy", "delivery"}
 _COMMON_CHANNEL_KEYS = {
     "name",
     "type",
@@ -129,6 +129,7 @@ class PluginConfig:
     privacy: PrivacyConfig
     delivery: DeliveryConfig
     rules: tuple[RoutingRule, ...] = ()
+    paused: bool = False
 
     def resolve_channels(
         self, environ: Mapping[str, str] | None = None
@@ -199,6 +200,7 @@ class PluginConfig:
 def default_config() -> dict[str, Any]:
     return {
         "version": CONFIG_VERSION,
+        "paused": False,
         "channels": [],
         "rules": [],
         "privacy": {
@@ -451,6 +453,9 @@ def load_config(
         raise ConfigError(f"unknown top-level keys: {sorted(unknown)}")
     if root.get("version") != CONFIG_VERSION:
         raise ConfigError(f"configuration version must be {CONFIG_VERSION}")
+    paused = root.get("paused", False)
+    if not isinstance(paused, bool):
+        raise ConfigError("paused must be boolean")
     raw_channels = root.get("channels", [])
     if not isinstance(raw_channels, list) or len(raw_channels) > 16:
         raise ConfigError("channels must be an array with at most 16 items")
@@ -472,6 +477,7 @@ def load_config(
         privacy=_parse_privacy(root.get("privacy", {})),
         delivery=_parse_delivery(root.get("delivery", {})),
         rules=rules,
+        paused=paused,
     )
 
 

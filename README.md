@@ -39,7 +39,7 @@ claude plugin install cx-plugin@cx-notifier
 claude plugin marketplace update cx-notifier && claude plugin update cx-plugin@cx-notifier
 ```
 
-命令成功后运行 `/reload-plugins`，或完全退出并重新启动 Claude Code。只有排查版本时才需要运行 `claude plugin details cx-plugin@cx-notifier`。`0.5.0` 应显示 `PermissionRequest`、`UserPromptSubmit` 和 `Stop`。其中 `UserPromptSubmit` 只在本地记录提问，不会单独发送通知；提问内容会随之后的 `Stop` 通知发送。0.5.0 还支持事件—项目—渠道路由、诊断命令、钉钉、桌面通知和 HMAC 签名 Webhook。
+命令成功后运行 `/reload-plugins`，或完全退出并重新启动 Claude Code。只有排查版本时才需要运行 `claude plugin details cx-plugin@cx-notifier`。`0.5.1` 应显示 `PermissionRequest`、`UserPromptSubmit` 和 `Stop`。其中 `UserPromptSubmit` 只在本地记录提问，不会单独发送通知；提问内容会随之后的 `Stop` 通知发送。0.5.1 还支持事件—项目—渠道路由、诊断命令、钉钉、桌面通知、HMAC 签名 Webhook，以及一键暂停和恢复推送。
 
 ## 飞书机器人快速配置
 
