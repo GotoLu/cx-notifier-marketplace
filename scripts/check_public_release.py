@@ -75,7 +75,10 @@ def url_is_public_example(raw: str) -> bool:
     if host == "test" or host.endswith(".test"):
         return True
     if host == "github.com":
-        return parsed.path.rstrip("/") in {
+        path = parsed.path.rstrip("/")
+        if path.endswith(".git"):
+            path = path[:-4]
+        return path in {
             "/GotoLu",
             "/GotoLu/cx-notifier-marketplace",
         }

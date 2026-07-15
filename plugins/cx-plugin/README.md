@@ -63,7 +63,75 @@ Claude Code 和 Codex 会从同一个 `hooks/hooks.json` 注册 `PermissionReque
 
 安装或更新后运行 `/reload-plugins`，或启动新会话；再通过 `/hooks` 确认两类 Hook 已注册。
 
-## 配置
+## 飞书机器人配置（从零开始）
+
+### 1. 在飞书群中创建自定义机器人
+
+在用于接收通知的飞书群中依次操作：
+
+1. 打开群设置；
+2. 进入“群机器人”；
+3. 点击“添加机器人”；
+4. 选择“自定义机器人”；
+5. 填写机器人名称和描述并完成添加；
+6. 复制飞书生成的 Webhook 地址并妥善保存。
+
+本插件使用的是“群自定义机器人”，不是飞书开放平台中的应用机器人。一个自定义机器人只向它所在的群发送消息。
+
+### 2. 配置安全校验
+
+建议在机器人的安全设置中启用“签名校验”，然后复制飞书生成的签名密钥。插件会根据该密钥为每次请求生成签名。
+
+- 启用了签名校验：配置时同时提供 Webhook 和签名密钥；
+- 未启用签名校验：只提供 Webhook，省略下文的 `--secret-prompt`；
+- 不建议把真实 Webhook 或签名密钥提交到项目仓库；
+- 如果使用飞书关键词校验，关键词必须能匹配通知正文，例如 `项目`；
+- IP 白名单需要填写运行 Codex 或 Claude Code 机器的公网出口 IP，动态网络环境不建议使用。
+
+### 3. 使用配置工具保存 Webhook
+
+Marketplace 安装不会把配置命令放入全局 `PATH`。首次配置时，克隆公开仓库并进入插件目录：
+
+```bash
+git clone https://github.com/GotoLu/cx-notifier-marketplace.git
+cd cx-notifier-marketplace/plugins/cx-plugin
+```
+
+启用了飞书签名校验时执行：
+
+```bash
+python3 scripts/configure.py init
+python3 scripts/configure.py add --type feishu --name feishu-main \
+  --webhook-prompt --secret-prompt
+```
+
+命令会先提示输入 Webhook，再提示输入签名密钥，输入内容不会在终端回显。未启用签名校验时改为：
+
+```bash
+python3 scripts/configure.py init
+python3 scripts/configure.py add --type feishu --name feishu-main \
+  --webhook-prompt
+```
+
+如果希望每条消息都 `@所有人`，在 `add` 命令末尾增加 `--mention-all`。飞书群可能限制只有群主或管理员可以 `@所有人`，机器人也需要相应权限。
+
+### 4. 验证并发送测试消息
+
+```bash
+python3 scripts/configure.py validate
+python3 scripts/configure.py list
+python3 scripts/configure.py test --channel feishu-main
+```
+
+通过条件：
+
+- `validate` 显示配置有效；
+- `list` 能看到已启用的 `feishu-main`，但不会显示真实 Webhook 或密钥；
+- 飞书群收到“配置测试”消息。
+
+测试成功后，重新加载插件：Claude Code 运行 `/reload-plugins`，Codex 新建一个任务。随后分别触发一次权限请求或完成一次普通回复，确认能收到真实通知。
+
+### 5. 配置文件位置
 
 默认配置文件：
 
@@ -72,15 +140,6 @@ Claude Code 和 Codex 会从同一个 `hooks/hooks.json` 注册 `PermissionReque
 ```
 
 也可设置 `CX_NOTIFY_CONFIG` 指向其他绝对路径。配置文件可能包含 Webhook 和签名密钥，必须保持 `0600` 权限。
-
-推荐使用隐藏式输入配置飞书机器人：
-
-```bash
-python3 scripts/configure.py init
-python3 scripts/configure.py add --type feishu --name feishu-main \
-  --webhook-prompt --secret-prompt --mention-all
-python3 scripts/configure.py validate
-```
 
 常用维护命令：
 
