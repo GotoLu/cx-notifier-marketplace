@@ -20,15 +20,26 @@ claude plugin install cx-plugin@cx-notifier
 
 安装后运行 `/reload-plugins` 或新建 Claude Code 会话。具体配置见 [插件说明](plugins/cx-plugin/README.md)。
 
-### Claude Code 一键更新
+### Claude Code 自动更新（推荐）
 
-已经安装旧版本时，重新打开会话不会自动更新插件。复制下面这一条命令即可同时刷新 marketplace 并升级插件：
+第三方 marketplace 默认不自动更新。首次安装后只需开启一次官方自动更新：
+
+1. 在 Claude Code 输入 `/plugin`；
+2. 进入 `Marketplaces`；
+3. 选择 `cx-notifier`；
+4. 选择 `Enable auto-update`。
+
+此后 Claude Code 会在启动后自动刷新 marketplace 并升级插件。后台检查可能随机延迟最多约 10 分钟；更新完成后按提示运行 `/reload-plugins`，或者在下一次启动时使用新版本。
+
+### Claude Code 手动更新（故障排查）
+
+尚未开启自动更新或需要立即升级时，复制下面这一条命令：
 
 ```bash
 claude plugin marketplace update cx-notifier && claude plugin update cx-plugin@cx-notifier
 ```
 
-命令成功后，完全退出并重新启动 Claude Code。日常更新不需要执行其他命令；只有排查版本时才需要运行 `claude plugin details cx-plugin@cx-notifier`。`0.3.0` 应显示 `PermissionRequest`、`UserPromptSubmit` 和 `Stop`。其中 `UserPromptSubmit` 只在本地记录提问，不会单独发送通知；提问内容会随之后的 `Stop` 通知发送。
+命令成功后运行 `/reload-plugins`，或完全退出并重新启动 Claude Code。只有排查版本时才需要运行 `claude plugin details cx-plugin@cx-notifier`。`0.3.0` 应显示 `PermissionRequest`、`UserPromptSubmit` 和 `Stop`。其中 `UserPromptSubmit` 只在本地记录提问，不会单独发送通知；提问内容会随之后的 `Stop` 通知发送。
 
 ## 飞书机器人快速配置
 

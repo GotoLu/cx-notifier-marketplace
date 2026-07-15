@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Recommend Claude Code's official per-marketplace auto-update flow and keep the one-line manual update command for troubleshooting.
+
 ## 0.3.0 - 2026-07-15
 
 - Add a one-command Feishu setup helper that locates an installed Codex or Claude Code plugin and delegates secret entry to the existing secure configurator.

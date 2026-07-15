@@ -66,15 +66,28 @@ Claude Code 和 Codex 会从同一个 `hooks/hooks.json` 注册 `PermissionReque
 
 安装或更新后运行 `/reload-plugins`，或启动新会话；再通过 `/hooks` 确认三类 Hook 已注册。
 
-### Claude Code 升级已有安装
+### Claude Code 开启自动更新（推荐）
 
-重新打开会话不会自动更新插件。日常升级只需复制这一条命令，它会依次刷新 marketplace 并升级插件：
+第三方 marketplace 默认关闭自动更新。每位用户首次安装后只需开启一次：
+
+1. 在 Claude Code 输入 `/plugin`；
+2. 进入 `Marketplaces`；
+3. 选择 `cx-notifier`；
+4. 选择 `Enable auto-update`。
+
+开启后，Claude Code 会在每次启动后于后台刷新 marketplace，并将已安装的插件升级到最新版。检查会随机延迟最多约 10 分钟，当前运行中的会话仍使用启动时加载的版本；看到更新提示后运行 `/reload-plugins` 即可应用，也可以等下一次启动自动生效。
+
+如果设置了 `DISABLE_AUTOUPDATER`，Claude Code 会同时关闭插件自动更新。希望只关闭 Claude Code 自身更新、保留插件自动更新时，可同时设置 `FORCE_AUTOUPDATE_PLUGINS=1`。
+
+### Claude Code 手动更新（故障排查）
+
+尚未开启自动更新、需要立即升级或后台更新失败时，复制这一条命令，它会依次刷新 marketplace 并升级插件：
 
 ```bash
 claude plugin marketplace update cx-notifier && claude plugin update cx-plugin@cx-notifier
 ```
 
-更新命令提示成功后，需要完全退出并重新启动 Claude Code。无需执行其他命令。
+更新命令提示成功后，运行 `/reload-plugins`，或完全退出并重新启动 Claude Code。
 
 只有排查版本时才需要运行：
 
