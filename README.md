@@ -4,7 +4,7 @@
   <img src="plugins/cx-plugin/assets/social-preview.svg" alt="牛马呼叫器" width="920">
 </p>
 
-**让 Agent 先干，轮到牛马再回来。** 把任务扔给 Codex 或 Claude Code，然后该摸鱼摸鱼。它要审批、跑完当前回复时，牛马呼叫器会通过飞书、企业微信、钉钉、macOS/Linux 桌面或 HTTPS Webhook 喊你回来。
+**活干完了吗？就跑** 把任务扔给 Codex 或 Claude Code，然后该摸鱼摸鱼。它要审批、跑完当前回复时，牛马呼叫器会通过飞书、企业微信、钉钉、macOS/Linux 桌面或 HTTPS Webhook 喊你回来。
 
 - 不发送代码、diff、终端输出、工具参数或助手回复；
 - 通知端不允许远程批准，操作仍须回到原会话完成；
