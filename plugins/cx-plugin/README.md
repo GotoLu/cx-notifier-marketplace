@@ -68,14 +68,15 @@ Claude Code 和 Codex 会从同一个 `hooks/hooks.json` 注册 `PermissionReque
 
 ### Claude Code 升级已有安装
 
-重新打开会话不会自动刷新 GitHub marketplace。升级已有安装时执行：
+重新打开会话不会自动更新插件。日常升级只需复制这一条命令，它会依次刷新 marketplace 并升级插件：
 
 ```bash
-claude plugin marketplace update cx-notifier
-claude plugin update cx-plugin@cx-notifier
+claude plugin marketplace update cx-notifier && claude plugin update cx-plugin@cx-notifier
 ```
 
-更新命令提示成功后，需要完全退出并重新启动 Claude Code。然后运行：
+更新命令提示成功后，需要完全退出并重新启动 Claude Code。无需执行其他命令。
+
+只有排查版本时才需要运行：
 
 ```bash
 claude plugin details cx-plugin@cx-notifier
