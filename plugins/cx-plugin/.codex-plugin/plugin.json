@@ -1,7 +1,7 @@
 {
   "name": "cx-plugin",
-  "version": "0.5.1",
-  "description": "Route privacy-minimized Codex and Claude Code notifications to configurable providers.",
+  "version": "0.5.2",
+  "description": "The human pager for Codex and Claude Code—get called back when the agent needs you.",
   "author": {
     "name": "GotoLu",
     "url": "https://github.com/GotoLu"
@@ -12,21 +12,37 @@
   "keywords": [
     "codex",
     "claude-code",
+    "ai-coding-agent",
     "notifications",
     "approvals",
+    "feishu",
+    "wecom",
+    "dingtalk",
     "webhooks"
   ],
   "interface": {
-    "displayName": "Codex / Claude Code Notifier",
-    "shortDescription": "Route coding-agent notifications to secure providers.",
-    "longDescription": "Routes privacy-minimized Codex and Claude Code events by event, project, and client to Feishu, WeCom, DingTalk, desktop, generic HTTPS, or HMAC-signed webhooks.",
+    "displayName": "CX Notifier｜牛马呼叫器",
+    "shortDescription": "Your coding agent's human pager.",
+    "longDescription": "Sends privacy-minimized reminders when Codex or Claude Code needs approval or finishes a response. Route events to Feishu, WeCom, DingTalk, desktop, generic HTTPS, or HMAC-signed webhooks without uploading code, terminal output, or assistant responses.",
     "developerName": "GotoLu",
     "category": "Productivity",
     "capabilities": [
       "Notifications"
     ],
+    "websiteURL": "https://github.com/GotoLu/cx-notifier-marketplace",
+    "privacyPolicyURL": "https://github.com/GotoLu/cx-notifier-marketplace/blob/main/PRIVACY.md",
+    "termsOfServiceURL": "https://github.com/GotoLu/cx-notifier-marketplace/blob/main/TERMS.md",
     "defaultPrompt": [
-      "Help me configure coding-agent notifications."
+      "Help me set up desktop notifications for Codex.",
+      "Help me configure Feishu notifications for Codex and Claude Code.",
+      "Diagnose why CX Notifier did not send a notification."
+    ],
+    "brandColor": "#2DD4BF",
+    "composerIcon": "./assets/icon.png",
+    "logo": "./assets/logo.png",
+    "screenshots": [
+      "./assets/notification-preview.png",
+      "./assets/social-preview.png"
     ]
   }
 }

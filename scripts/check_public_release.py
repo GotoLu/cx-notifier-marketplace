@@ -52,6 +52,12 @@ TEST_FIXTURES = {
     "sk-" + "supersecretvalue",
     "xoxb-" + "1234567890-secret",
 }
+ALLOWED_BINARY_ASSETS = {
+    "plugins/cx-plugin/assets/icon.png",
+    "plugins/cx-plugin/assets/logo.png",
+    "plugins/cx-plugin/assets/notification-preview.png",
+    "plugins/cx-plugin/assets/social-preview.png",
+}
 HOME_PATH = re.compile(r"/(?:Users|home)/[^/\s]+/")
 URL = re.compile(r"https?://[^\s\"'<>]+")
 EMAIL = re.compile(r"[A-Z0-9._%+-]+@([A-Z0-9.-]+\.[A-Z]{2,})", re.IGNORECASE)
@@ -74,6 +80,8 @@ def url_is_public_example(raw: str) -> bool:
         return True
     if host == "test" or host.endswith(".test"):
         return True
+    if host == "www.w3.org":
+        return parsed.path == "/2000/svg"
     if host == "github.com":
         path = parsed.path.rstrip("/")
         if path.endswith(".git"):
@@ -83,7 +91,10 @@ def url_is_public_example(raw: str) -> bool:
             "/GotoLu/cx-notifier-marketplace",
         } or path.startswith("/GotoLu/cx-notifier-marketplace/")
     if host == "raw.githubusercontent.com":
-        return parsed.path == "/GotoLu/cx-notifier-marketplace/main/scripts/setup_feishu.py"
+        return parsed.path in {
+            "/GotoLu/cx-notifier-marketplace/main/scripts/setup_desktop.py",
+            "/GotoLu/cx-notifier-marketplace/main/scripts/setup_feishu.py",
+        }
     if host == "open.feishu.cn":
         return parsed.path.endswith(("/example", "/private"))
     if host == "qyapi.weixin.qq.com":
@@ -98,6 +109,10 @@ def url_is_public_example(raw: str) -> bool:
 def scan_file(path: Path) -> list[str]:
     problems: list[str] = []
     raw = path.read_bytes()
+    if relative(path) in ALLOWED_BINARY_ASSETS:
+        if not raw.startswith(b"\x89PNG\r\n\x1a\n"):
+            return [f"invalid PNG asset: {relative(path)}"]
+        return []
     if b"\x00" in raw:
         return [f"binary file is not allowed: {relative(path)}"]
     try:
@@ -175,6 +190,18 @@ def main() -> int:
             for manifest in manifests
         ):
             problems.append("public manifest contains local publisher metadata")
+        interface = codex_manifest.get("interface", {})
+        asset_fields = [interface.get("composerIcon"), interface.get("logo")]
+        asset_fields.extend(interface.get("screenshots", []))
+        for asset in asset_fields:
+            if not isinstance(asset, str) or not asset.startswith("./assets/"):
+                problems.append("Codex manifest contains an invalid presentation asset path")
+                continue
+            asset_path = PLUGIN / asset.removeprefix("./")
+            if not asset_path.is_file():
+                problems.append(f"missing presentation asset: {asset}")
+            elif asset_path.stat().st_size > 5 * 1024 * 1024:
+                problems.append(f"presentation asset is larger than 5 MB: {asset}")
         for platform, marketplace in (
             ("Codex", codex_marketplace),
             ("Claude", claude_marketplace),
