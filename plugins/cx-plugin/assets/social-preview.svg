@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title desc">
+  <title id="title">CX Notifier social preview</title>
+  <desc id="desc">Leave the terminal and receive a notification when Codex or Claude Code needs you.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1280" y2="640" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#102A43"/>
+      <stop offset="0.58" stop-color="#071827"/>
+      <stop offset="1" stop-color="#05101C"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="740" y1="98" x2="1120" y2="530" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#67E8F9"/>
+      <stop offset="1" stop-color="#2DD4BF"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#020617" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+  <rect width="1280" height="640" fill="url(#bg)"/>
+  <circle cx="1160" cy="30" r="250" fill="#2DD4BF" opacity="0.08"/>
+  <circle cx="36" cy="640" r="260" fill="#60A5FA" opacity="0.07"/>
+  <g font-family="Inter, 'PingFang SC', 'Microsoft YaHei', ui-sans-serif, sans-serif">
+    <g transform="translate(72 66)">
+      <rect width="74" height="74" rx="20" fill="#102F42" stroke="#2DD4BF" stroke-width="3"/>
+      <path d="m19 26 13 11-13 11M39 49h16" fill="none" stroke="#67E8F9" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M53 17c-8 0-14 6-14 14v8l-5 7h38l-5-7v-8c0-8-6-14-14-14Z" fill="#2DD4BF" opacity="0.9"/>
+      <circle cx="67" cy="20" r="7" fill="#FBBF24"/>
+    </g>
+    <text x="170" y="119" fill="#E2E8F0" font-size="34" font-weight="720">CX Notifier</text>
+    <text x="72" y="256" fill="#F8FAFC" font-size="69" font-weight="780">让 Agent 跑，</text>
+    <text x="72" y="345" fill="#67E8F9" font-size="69" font-weight="780">轮到你再回来。</text>
+    <text x="76" y="415" fill="#B7C7D8" font-size="29">Codex / Claude Code 需要你时自动提醒</text>
+    <g transform="translate(76 476)" font-size="22" font-weight="650">
+      <rect width="138" height="48" rx="24" fill="#123147"/>
+      <text x="69" y="31" text-anchor="middle" fill="#A5F3FC">单向通知</text>
+      <rect x="154" width="164" height="48" rx="24" fill="#123147"/>
+      <text x="236" y="31" text-anchor="middle" fill="#A5F3FC">隐私最小化</text>
+      <rect x="334" width="184" height="48" rx="24" fill="#123147"/>
+      <text x="426" y="31" text-anchor="middle" fill="#A5F3FC">Codex + Claude</text>
+    </g>
+  </g>
+  <g transform="translate(720 84)" filter="url(#shadow)" font-family="Inter, 'PingFang SC', 'Microsoft YaHei', ui-sans-serif, sans-serif">
+    <rect width="470" height="472" rx="42" fill="#0B1828" stroke="#2A455D" stroke-width="5"/>
+    <rect x="32" y="34" width="406" height="180" rx="24" fill="#10263B"/>
+    <circle cx="66" cy="67" r="8" fill="#FB7185"/>
+    <circle cx="94" cy="67" r="8" fill="#FBBF24"/>
+    <circle cx="122" cy="67" r="8" fill="#34D399"/>
+    <text x="62" y="121" fill="#94A3B8" font-size="19">$ codex</text>
+    <text x="62" y="157" fill="#E2E8F0" font-size="22">正在实现登录模块并运行测试…</text>
+    <text x="62" y="190" fill="#2DD4BF" font-size="18">你可以先去做别的事</text>
+    <rect x="74" y="254" width="322" height="142" rx="28" fill="url(#accent)"/>
+    <circle cx="118" cy="299" r="24" fill="#0F3345"/>
+    <path d="m107 293 9 8-9 8M123 309h11" fill="none" stroke="#A5F3FC" stroke-width="4" stroke-linecap="round"/>
+    <text x="157" y="292" fill="#082F3B" font-size="18" font-weight="760">Codex · 任务已结束</text>
+    <text x="105" y="338" fill="#083344" font-size="20" font-weight="650">项目：production-api</text>
+    <text x="105" y="371" fill="#155E75" font-size="17">返回终端查看结果</text>
+    <circle cx="389" cy="246" r="24" fill="#FBBF24" stroke="#0B1828" stroke-width="7"/>
+    <text x="235" y="438" text-anchor="middle" fill="#7890A6" font-size="17">飞书 · 企业微信 · 钉钉 · 桌面</text>
+  </g>
+</svg>

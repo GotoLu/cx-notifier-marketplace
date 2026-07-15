@@ -1,6 +1,62 @@
-# Codex / Claude Code Notifier
+# CX Notifier — Codex / Claude Code 离岗提醒器
 
-`cx-plugin` 同时支持 Codex 和 Claude Code，处理三种原生 Hook 事件，并将单向提醒路由到飞书、企业微信、钉钉、桌面通知、通用 HTTPS Webhook 或 HMAC 签名 Webhook：
+<p align="center">
+  <img src="assets/logo.svg" alt="CX Notifier" width="760">
+</p>
+
+<p align="center"><strong>让 Agent 跑，轮到你再回来。</strong></p>
+
+Codex 或 Claude Code 需要审批、结束当前回复时，CX Notifier 会把单向提醒发送到飞书、企业微信、钉钉、macOS/Linux 桌面或 HTTPS Webhook。你不用反复切回终端确认进度。
+
+![CX Notifier 从终端向手机发送隐私最小化提醒](assets/notification-preview.svg)
+
+## 30 秒看到第一条提醒
+
+先安装插件，再启用不需要机器人和密钥的桌面通知。确认它适合你的工作流后，再配置飞书等移动渠道。
+
+### 1. 安装到 Codex 或 Claude Code
+
+Codex：
+
+```bash
+codex plugin marketplace add GotoLu/cx-notifier-marketplace
+codex plugin add cx-plugin@cx-notifier
+```
+
+Claude Code：
+
+```bash
+claude plugin marketplace add GotoLu/cx-notifier-marketplace
+claude plugin install cx-plugin@cx-notifier
+```
+
+### 2. 一条命令启用桌面通知
+
+适用于 macOS，或已安装 `notify-send` 的 Linux：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/GotoLu/cx-notifier-marketplace/main/scripts/setup_desktop.py | python3 -
+```
+
+脚本只定位已安装的插件、创建 `desktop-main` 渠道、验证配置并触发一条本机测试通知。执行前可先查看 [`setup_desktop.py`](https://github.com/GotoLu/cx-notifier-marketplace/blob/main/scripts/setup_desktop.py) 源码。
+
+### 3. 开始正常使用
+
+- Codex：确认 Hook 信任提示，然后新建任务；
+- Claude Code：运行 `/reload-plugins`，或新建会话。
+
+完成一次普通回复，或遇到一次权限请求后，你就会收到提醒。需要手机提醒时，继续配置[飞书机器人](#飞书机器人配置从零开始)，或使用企业微信、钉钉和通用 Webhook。
+
+## 为什么选择 CX Notifier
+
+- **不再守着终端**：只在需要你或当前回复结束时提醒；
+- **隐私最小化**：不发送代码、diff、终端输出、工具参数或助手回复；
+- **权限边界清晰**：通知端不允许远程批准，批准或拒绝必须回到原会话；
+- **一个插件覆盖两端**：Codex 和 Claude Code 共用 Hook、渠道及路由配置。
+
+## 处理的事件
+
+`cx-plugin` 处理三种原生 Hook 事件：
 
 - `PermissionRequest`：编码代理有操作等待用户审批；
 - `UserPromptSubmit`：只在本机暂存本回合用户提问的脱敏摘要，不发送通知；
@@ -95,7 +151,7 @@ claude plugin marketplace update cx-notifier && claude plugin update cx-plugin@c
 claude plugin details cx-plugin@cx-notifier
 ```
 
-`0.3.0` 应显示三个 Hooks：`PermissionRequest`、`UserPromptSubmit`、`Stop`。`UserPromptSubmit` 不会单独发送飞书消息，它只在本地记录提问；对应的 `Stop` 通知会显示“提问：…”。如果仍显示 `0.2.0`，说明 marketplace 尚未刷新。
+`0.5.2` 应显示三个 Hooks：`PermissionRequest`、`UserPromptSubmit`、`Stop`。`UserPromptSubmit` 不会单独发送飞书消息，它只在本地记录提问；对应的 `Stop` 通知会显示“提问：…”。如果仍显示旧版本，说明 marketplace 尚未刷新。
 
 ## 飞书机器人配置（从零开始）
 

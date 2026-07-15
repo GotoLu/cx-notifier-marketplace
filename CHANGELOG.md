@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 0.5.2 - 2026-07-15
+
+- Add a zero-secret, one-command desktop notification setup path for macOS and Linux.
+- Rework the repository and plugin README opening around the user outcome and first-notification flow.
+- Add store-ready icon, logo, social preview, and notification workflow assets.
+- Add public privacy, terms, and support documents and expose them in the Codex manifest.
+- Improve plugin discovery metadata for coding-agent and Chinese team-chat notification searches.
 - Recommend Claude Code's official per-marketplace auto-update flow and keep the one-line manual update command for troubleshooting.
 
 ## 0.5.1 - 2026-07-15

@@ -12,12 +12,17 @@ class PluginFileTests(unittest.TestCase):
     def test_manifest_and_default_hook_discovery(self) -> None:
         manifest = json.loads((ROOT / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8"))
         self.assertEqual(manifest["name"], ROOT.name)
-        self.assertEqual(manifest["version"].split("+", 1)[0], "0.5.1")
+        self.assertEqual(manifest["version"].split("+", 1)[0], "0.5.2")
         self.assertNotIn("hooks", manifest)
         self.assertNotIn("apps", manifest)
         self.assertNotIn("mcpServers", manifest)
         self.assertTrue((ROOT / "hooks" / "hooks.json").is_file())
         self.assertTrue((ROOT / "scripts" / "pause.py").is_file())
+        self.assertTrue((ROOT / "assets" / "icon.png").is_file())
+        self.assertTrue((ROOT / "assets" / "logo.png").is_file())
+        self.assertTrue((ROOT / "assets" / "notification-preview.png").is_file())
+        self.assertEqual(manifest["interface"]["composerIcon"], "./assets/icon.png")
+        self.assertEqual(manifest["interface"]["logo"], "./assets/logo.png")
 
     def test_claude_manifest_and_shared_hooks(self) -> None:
         manifest = json.loads(

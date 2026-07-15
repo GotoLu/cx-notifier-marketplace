@@ -1,8 +1,8 @@
 {
   "name": "cx-plugin",
-  "displayName": "Codex / Claude Code Notifier",
-  "version": "0.5.1",
-  "description": "Route privacy-minimized permission and completion notifications to configurable providers.",
+  "displayName": "CX Notifier",
+  "version": "0.5.2",
+  "description": "Get notified when Codex or Claude Code needs approval or finishes a response.",
   "author": {
     "name": "GotoLu",
     "url": "https://github.com/GotoLu"
@@ -13,8 +13,12 @@
   "keywords": [
     "codex",
     "claude-code",
+    "ai-coding-agent",
     "notifications",
     "approvals",
+    "feishu",
+    "wecom",
+    "dingtalk",
     "webhooks"
   ]
 }

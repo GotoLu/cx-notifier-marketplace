@@ -1,6 +1,26 @@
-# Codex / Claude Code Notifier Marketplace
+# CX Notifier — Codex / Claude Code 离岗提醒器
 
-这是 `cx-plugin` 的公开分发仓库。插件在 Codex 或 Claude Code 请求权限、结束当前回复时，向飞书、企业微信群机器人或通用 HTTPS Webhook 发送单向提醒。
+<p align="center">
+  <img src="plugins/cx-plugin/assets/social-preview.svg" alt="让 Agent 跑，轮到你再回来" width="920">
+</p>
+
+**让 Agent 跑，轮到你再回来。** CX Notifier 在 Codex 或 Claude Code 需要审批、结束当前回复时，把隐私最小化的单向提醒发送到飞书、企业微信、钉钉、macOS/Linux 桌面或 HTTPS Webhook。
+
+- 不发送代码、diff、终端输出、工具参数或助手回复；
+- 通知端不允许远程批准，操作仍须回到原会话完成；
+- Codex 与 Claude Code 共用一套 Hook、渠道和路由配置。
+
+## 30 秒体验
+
+安装插件后，用一条命令启用无需机器人和密钥的桌面通知：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/GotoLu/cx-notifier-marketplace/main/scripts/setup_desktop.py | python3 -
+```
+
+适用于 macOS，或已安装 `notify-send` 的 Linux。脚本会创建 `desktop-main`、验证配置并触发一条测试通知。需要手机提醒时，再配置下方的飞书机器人。完整能力、隐私边界和故障排查见[插件说明](plugins/cx-plugin/README.md)。
+
+## 平台安装
 
 ## Codex 安装
 
@@ -39,7 +59,7 @@ claude plugin install cx-plugin@cx-notifier
 claude plugin marketplace update cx-notifier && claude plugin update cx-plugin@cx-notifier
 ```
 
-命令成功后运行 `/reload-plugins`，或完全退出并重新启动 Claude Code。只有排查版本时才需要运行 `claude plugin details cx-plugin@cx-notifier`。`0.5.1` 应显示 `PermissionRequest`、`UserPromptSubmit` 和 `Stop`。其中 `UserPromptSubmit` 只在本地记录提问，不会单独发送通知；提问内容会随之后的 `Stop` 通知发送。0.5.1 还支持事件—项目—渠道路由、诊断命令、钉钉、桌面通知、HMAC 签名 Webhook，以及一键暂停和恢复推送。
+命令成功后运行 `/reload-plugins`，或完全退出并重新启动 Claude Code。只有排查版本时才需要运行 `claude plugin details cx-plugin@cx-notifier`。`0.5.2` 应显示 `PermissionRequest`、`UserPromptSubmit` 和 `Stop`。其中 `UserPromptSubmit` 只在本地记录提问，不会单独发送通知；提问内容会随之后的 `Stop` 通知发送。0.5.2 还支持事件—项目—渠道路由、诊断命令、钉钉、桌面通知、HMAC 签名 Webhook，以及一键暂停和恢复推送。
 
 ## 飞书机器人快速配置
 
@@ -70,10 +90,12 @@ claude plugin marketplace update cx-notifier && claude plugin update cx-plugin@c
 plugins/cx-plugin/                   # 两个平台共享的插件实现
   .codex-plugin/plugin.json          # Codex 元数据
   .claude-plugin/plugin.json         # Claude Code 元数据
+  assets/                            # 商店图标、Logo 与功能预览
   hooks/                             # 共享 Hook 配置与 Python 入口
   scripts/                           # 本地配置工具
   tests/                             # 自动化测试
 scripts/check_public_release.py      # 发布隐私与结构检查
+scripts/setup_desktop.py             # 零密钥桌面通知快速配置
 ```
 
 ## 发布前检查
@@ -93,4 +115,4 @@ python3 -m unittest discover -s plugins/cx-plugin/tests -v
 - 插件不会上传 transcript、原始工具输入、shell 命令、diff 或终端输出。
 - 任务结束通知只附带本回合用户提问的脱敏摘要（最长 160 字），不发送助手回复。
 
-安全问题请参考 [SECURITY.md](SECURITY.md)。本项目使用 [MIT License](LICENSE)。
+[隐私政策](PRIVACY.md) · [使用条款](TERMS.md) · [支持](SUPPORT.md) · [安全报告](SECURITY.md) · [MIT License](LICENSE)

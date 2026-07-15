@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900" role="img" aria-labelledby="title desc">
+  <title id="title">CX Notifier workflow preview</title>
+  <desc id="desc">A coding agent runs in a terminal and sends a minimal notification to a phone.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1440" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F2940"/>
+      <stop offset="1" stop-color="#06111E"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="758" y1="255" x2="1260" y2="710" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#67E8F9"/>
+      <stop offset="1" stop-color="#2DD4BF"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="24" stdDeviation="28" flood-color="#020617" flood-opacity="0.55"/>
+    </filter>
+  </defs>
+  <rect width="1440" height="900" fill="url(#bg)"/>
+  <circle cx="1350" cy="55" r="300" fill="#2DD4BF" opacity="0.07"/>
+  <circle cx="90" cy="875" r="300" fill="#60A5FA" opacity="0.06"/>
+  <g font-family="Inter, 'PingFang SC', 'Microsoft YaHei', ui-sans-serif, sans-serif">
+    <text x="90" y="96" fill="#F8FAFC" font-size="42" font-weight="760">任务在跑，你不必守着终端</text>
+    <text x="92" y="142" fill="#9FB3C8" font-size="23">只在需要审批或回复结束时提醒；不发送代码、终端输出或助手回复</text>
+    <g transform="translate(80 205)" filter="url(#shadow)">
+      <rect width="770" height="530" rx="30" fill="#081421" stroke="#2A455D" stroke-width="5"/>
+      <path d="M0 30C0 13.43 13.43 0 30 0h710c16.57 0 30 13.43 30 30v55H0V30Z" fill="#13283D"/>
+      <circle cx="42" cy="43" r="10" fill="#FB7185"/>
+      <circle cx="77" cy="43" r="10" fill="#FBBF24"/>
+      <circle cx="112" cy="43" r="10" fill="#34D399"/>
+      <text x="145" y="52" fill="#7791A8" font-size="19">production-api — codex</text>
+      <text x="48" y="143" fill="#8CA3B8" font-size="22">$ codex</text>
+      <text x="48" y="193" fill="#E2E8F0" font-size="25">› 修复登录失败并运行完整测试</text>
+      <text x="48" y="252" fill="#67E8F9" font-size="22">• 分析认证流程</text>
+      <text x="48" y="297" fill="#67E8F9" font-size="22">• 修改会话恢复逻辑</text>
+      <text x="48" y="342" fill="#FBBF24" font-size="22">◌ 运行测试…</text>
+      <rect x="48" y="389" width="674" height="91" rx="18" fill="#0E2133"/>
+      <text x="76" y="426" fill="#9FB3C8" font-size="19">CX Notifier 已在后台监听原生 Hook</text>
+      <text x="76" y="458" fill="#5EEAD4" font-size="18">现在可以离开终端，轮到你时会收到提醒</text>
+    </g>
+    <path d="M880 468c70-76 118-96 183-96" fill="none" stroke="#2DD4BF" stroke-width="5" stroke-linecap="round" stroke-dasharray="12 16"/>
+    <path d="m1045 352 25 19-25 19" fill="none" stroke="#2DD4BF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <g transform="translate(1010 188)" filter="url(#shadow)">
+      <rect width="330" height="610" rx="58" fill="#07101A" stroke="#344D63" stroke-width="7"/>
+      <rect x="20" y="24" width="290" height="562" rx="42" fill="#EEF7F6"/>
+      <rect x="111" y="39" width="108" height="22" rx="11" fill="#07101A"/>
+      <text x="49" y="102" fill="#64748B" font-size="17">09:41</text>
+      <text x="49" y="155" fill="#0F172A" font-size="27" font-weight="760">通知</text>
+      <rect x="38" y="190" width="254" height="188" rx="25" fill="url(#accent)"/>
+      <circle cx="77" cy="232" r="22" fill="#0F3345"/>
+      <path d="m67 227 8 7-8 7M81 241h10" fill="none" stroke="#A5F3FC" stroke-width="4" stroke-linecap="round"/>
+      <text x="111" y="226" fill="#083344" font-size="16" font-weight="760">CX Notifier</text>
+      <text x="111" y="250" fill="#155E75" font-size="14">现在</text>
+      <text x="58" y="295" fill="#082F49" font-size="19" font-weight="720">Codex · 任务已结束</text>
+      <text x="58" y="326" fill="#164E63" font-size="16">项目：production-api</text>
+      <text x="58" y="353" fill="#164E63" font-size="16">提问：修复登录失败…</text>
+      <g transform="translate(40 424)">
+        <rect width="250" height="52" rx="18" fill="#DDEBEA"/>
+        <text x="125" y="33" text-anchor="middle" fill="#315268" font-size="16" font-weight="650">返回终端查看结果</text>
+      </g>
+      <text x="165" y="535" text-anchor="middle" fill="#64748B" font-size="14">单向提醒 · 无远程批准</text>
+    </g>
+  </g>
+</svg>
