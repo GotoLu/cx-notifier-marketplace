@@ -88,34 +88,54 @@ Claude Code 和 Codex 会从同一个 `hooks/hooks.json` 注册 `PermissionReque
 - 如果使用飞书关键词校验，关键词必须能匹配通知正文，例如 `项目`；
 - IP 白名单需要填写运行 Codex 或 Claude Code 机器的公网出口 IP，动态网络环境不建议使用。
 
-### 3. 使用配置工具保存 Webhook
+### 3. 一键配置（推荐）
 
-Marketplace 安装不会把配置命令放入全局 `PATH`。首次配置时，克隆公开仓库并进入插件目录：
+确认已经通过 Codex 或 Claude Code marketplace 安装插件，然后在终端执行：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/GotoLu/cx-notifier-marketplace/main/scripts/setup_feishu.py | python3 -
+```
+
+一键脚本只负责定位本机已安装的插件，并调用插件自带的安全配置器。Webhook 和签名密钥由配置器通过终端隐藏输入，不会作为命令行参数传递，也不会发送到 GitHub。
+
+脚本默认行为：
+
+1. 自动查找 Codex 或 Claude Code 安装的 `cx-plugin`；
+2. 创建 `~/.config/cx-plugin/config.json`；
+3. 隐藏输入 Webhook 和签名密钥；
+4. 添加并验证 `feishu-main`；
+5. 向飞书群发送一条测试消息。
+
+常用选项：
+
+```bash
+# 机器人未启用签名校验
+curl -fsSL https://raw.githubusercontent.com/GotoLu/cx-notifier-marketplace/main/scripts/setup_feishu.py | python3 - --no-signature
+
+# 每条通知 @所有人
+curl -fsSL https://raw.githubusercontent.com/GotoLu/cx-notifier-marketplace/main/scripts/setup_feishu.py | python3 - --mention-all
+
+# 替换已有 feishu-main 配置
+curl -fsSL https://raw.githubusercontent.com/GotoLu/cx-notifier-marketplace/main/scripts/setup_feishu.py | python3 - --replace
+```
+
+执行从网络下载的脚本前，可先在仓库中查看 `scripts/setup_feishu.py` 源码。
+
+### 4. 手动配置（可选）
+
+不希望使用一键脚本时，可克隆公开仓库：
 
 ```bash
 git clone https://github.com/GotoLu/cx-notifier-marketplace.git
 cd cx-notifier-marketplace/plugins/cx-plugin
-```
-
-启用了飞书签名校验时执行：
-
-```bash
 python3 scripts/configure.py init
 python3 scripts/configure.py add --type feishu --name feishu-main \
   --webhook-prompt --secret-prompt
 ```
 
-命令会先提示输入 Webhook，再提示输入签名密钥，输入内容不会在终端回显。未启用签名校验时改为：
+未启用签名校验时省略 `--secret-prompt`。如果希望每条消息都 `@所有人`，增加 `--mention-all`。飞书群可能限制只有群主或管理员可以 `@所有人`，机器人也需要相应权限。
 
-```bash
-python3 scripts/configure.py init
-python3 scripts/configure.py add --type feishu --name feishu-main \
-  --webhook-prompt
-```
-
-如果希望每条消息都 `@所有人`，在 `add` 命令末尾增加 `--mention-all`。飞书群可能限制只有群主或管理员可以 `@所有人`，机器人也需要相应权限。
-
-### 4. 验证并发送测试消息
+### 5. 验证并发送测试消息
 
 ```bash
 python3 scripts/configure.py validate
@@ -131,7 +151,7 @@ python3 scripts/configure.py test --channel feishu-main
 
 测试成功后，重新加载插件：Claude Code 运行 `/reload-plugins`，Codex 新建一个任务。随后分别触发一次权限请求或完成一次普通回复，确认能收到真实通知。
 
-### 5. 配置文件位置
+### 6. 配置文件位置
 
 默认配置文件：
 

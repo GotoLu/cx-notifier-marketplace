@@ -81,7 +81,9 @@ def url_is_public_example(raw: str) -> bool:
         return path in {
             "/GotoLu",
             "/GotoLu/cx-notifier-marketplace",
-        }
+        } or path.startswith("/GotoLu/cx-notifier-marketplace/")
+    if host == "raw.githubusercontent.com":
+        return parsed.path == "/GotoLu/cx-notifier-marketplace/main/scripts/setup_feishu.py"
     if host == "open.feishu.cn":
         return parsed.path.endswith(("/example", "/private"))
     if host == "qyapi.weixin.qq.com":

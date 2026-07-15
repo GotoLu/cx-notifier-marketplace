@@ -25,24 +25,21 @@ claude plugin install cx-plugin@cx-notifier
 1. 在接收通知的飞书群中打开“群设置” → “群机器人” → “添加机器人” → “自定义机器人”。
 2. 设置机器人名称并完成添加，复制飞书生成的 Webhook 地址。
 3. 建议在机器人的安全设置中启用“签名校验”，并复制签名密钥。若不启用签名校验，后续配置时省略 `--secret-prompt`。
-4. 克隆本仓库并进入插件目录：
+4. 确认已经通过上面的 Codex 或 Claude Code marketplace 命令安装插件，然后在终端执行一键配置：
 
    ```bash
-   git clone https://github.com/GotoLu/cx-notifier-marketplace.git
-   cd cx-notifier-marketplace/plugins/cx-plugin
+   curl -fsSL https://raw.githubusercontent.com/GotoLu/cx-notifier-marketplace/main/scripts/setup_feishu.py | python3 -
    ```
 
-5. 通过隐藏输入保存 Webhook 和签名密钥，然后发送测试消息：
+   脚本会自动找到已安装插件，隐藏输入 Webhook 和签名密钥，验证配置并发送测试消息，无需克隆仓库。
+
+5. 如果机器人没有启用签名校验，使用：
 
    ```bash
-   python3 scripts/configure.py init
-   python3 scripts/configure.py add --type feishu --name feishu-main \
-     --webhook-prompt --secret-prompt
-   python3 scripts/configure.py validate
-   python3 scripts/configure.py test --channel feishu-main
+   curl -fsSL https://raw.githubusercontent.com/GotoLu/cx-notifier-marketplace/main/scripts/setup_feishu.py | python3 - --no-signature
    ```
 
-命令不会在终端回显 Webhook 或密钥，配置默认保存在 `~/.config/cx-plugin/config.json` 并限制为当前用户可读写。需要每条通知都 `@所有人` 时，可在 `add` 命令末尾增加 `--mention-all`。完整说明和故障排查见[飞书机器人配置](plugins/cx-plugin/README.md#飞书机器人配置从零开始)。
+命令不会在终端回显 Webhook 或密钥，配置默认保存在 `~/.config/cx-plugin/config.json` 并限制为当前用户可读写。需要每条通知都 `@所有人` 时，在命令末尾增加 `--mention-all`；重新配置已有渠道时增加 `--replace`。执行前可先查看 [`setup_feishu.py`](scripts/setup_feishu.py) 源码。完整说明和故障排查见[飞书机器人配置](plugins/cx-plugin/README.md#飞书机器人配置从零开始)。
 
 ## 仓库结构
 
@@ -62,6 +59,7 @@ scripts/check_public_release.py      # 发布隐私与结构检查
 
 ```bash
 python3 scripts/check_public_release.py
+python3 -B -m unittest discover -s tests -v
 python3 -m unittest discover -s plugins/cx-plugin/tests -v
 ```
 
