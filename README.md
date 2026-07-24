@@ -12,13 +12,13 @@
 
 ## 30 秒体验
 
-安装插件后，用一条命令启用无需机器人和密钥的桌面通知：
+一条命令检测本机 Codex/Claude Code、安装插件，并启用无需机器人和密钥的桌面通知：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/GotoLu/cx-notifier-marketplace/main/scripts/setup_desktop.py | python3 -
+curl -fsSL https://raw.githubusercontent.com/GotoLu/cx-notifier-marketplace/main/scripts/install.py | python3 -
 ```
 
-适用于 macOS，或已安装 `notify-send` 的 Linux。脚本会创建 `desktop-main`、验证配置并触发一条测试通知。需要手机提醒时，再配置下方的飞书机器人。完整能力、隐私边界和故障排查见[插件说明](plugins/cx-plugin/README.md)。
+适用于 macOS，或已安装 `notify-send` 的 Linux。脚本会调用 Codex/Claude Code 官方 marketplace 命令，创建 `desktop-main`、验证配置并触发一条测试通知。需要手机提醒时，改用下方的飞书命令。完整能力、隐私边界和故障排查见[插件说明](plugins/cx-plugin/README.md)。
 
 ## 平台安装
 
@@ -66,18 +66,18 @@ claude plugin marketplace update cx-notifier && claude plugin update cx-plugin@c
 1. 在接收通知的飞书群中打开“群设置” → “群机器人” → “添加机器人” → “自定义机器人”。
 2. 设置机器人名称并完成添加，复制飞书生成的 Webhook 地址。
 3. 建议在机器人的安全设置中启用“签名校验”，并复制签名密钥。若不启用签名校验，后续配置时省略 `--secret-prompt`。
-4. 确认已经通过上面的 Codex 或 Claude Code marketplace 命令安装插件，然后在终端执行一键配置：
+4. 在终端执行一键安装与配置：
 
    ```bash
-   curl -fsSL https://raw.githubusercontent.com/GotoLu/cx-notifier-marketplace/main/scripts/setup_feishu.py | python3 -
+   curl -fsSL https://raw.githubusercontent.com/GotoLu/cx-notifier-marketplace/main/scripts/install.py | python3 - --channel feishu
    ```
 
-   脚本会自动找到已安装插件，隐藏输入 Webhook 和签名密钥，验证配置并发送测试消息，无需克隆仓库。
+   脚本会自动检测 Codex/Claude Code、安装插件，隐藏输入 Webhook 和签名密钥，验证配置并发送测试消息，无需克隆仓库。
 
 5. 如果机器人没有启用签名校验，使用：
 
    ```bash
-   curl -fsSL https://raw.githubusercontent.com/GotoLu/cx-notifier-marketplace/main/scripts/setup_feishu.py | python3 - --no-signature
+   curl -fsSL https://raw.githubusercontent.com/GotoLu/cx-notifier-marketplace/main/scripts/install.py | python3 - --channel feishu --no-signature
    ```
 
 命令不会在终端回显 Webhook 或密钥，配置默认保存在 `~/.config/cx-plugin/config.json` 并限制为当前用户可读写。需要每条通知都 `@所有人` 时，在命令末尾增加 `--mention-all`；重新配置已有渠道时增加 `--replace`。执行前可先查看 [`setup_feishu.py`](scripts/setup_feishu.py) 源码。完整说明和故障排查见[飞书机器人配置](plugins/cx-plugin/README.md#飞书机器人配置从零开始)。
@@ -95,8 +95,15 @@ plugins/cx-plugin/                   # 两个平台共享的插件实现
   scripts/                           # 本地配置工具
   tests/                             # 自动化测试
 scripts/check_public_release.py      # 发布隐私与结构检查
+scripts/install.py                   # Codex/Claude Code 一键安装与渠道配置
 scripts/setup_desktop.py             # 零密钥桌面通知快速配置
 ```
+
+## 使用趋势
+
+安装器不收集或上传使用数据。维护者只通过 GitHub 仓库的
+`Insights → Traffic` 观察 `Unique cloners`、访问量和 Stars 的变化，用于判断是否有人尝试安装；
+这些指标不是精确用户数。GitHub Traffic 只保留最近 14 天，需定期人工记录。
 
 ## 发布前检查
 

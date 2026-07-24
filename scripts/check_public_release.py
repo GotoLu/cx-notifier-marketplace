@@ -92,6 +92,7 @@ def url_is_public_example(raw: str) -> bool:
         } or path.startswith("/GotoLu/cx-notifier-marketplace/")
     if host == "raw.githubusercontent.com":
         return parsed.path in {
+            "/GotoLu/cx-notifier-marketplace/main/scripts/install.py",
             "/GotoLu/cx-notifier-marketplace/main/scripts/setup_desktop.py",
             "/GotoLu/cx-notifier-marketplace/main/scripts/setup_feishu.py",
         }
