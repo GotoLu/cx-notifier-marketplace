@@ -19,6 +19,20 @@ SPEC.loader.exec_module(install)
 
 
 class InstallTests(unittest.TestCase):
+    def test_windows_bootstrap_uses_python_installer_and_feishu_default(self) -> None:
+        source = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
+        self.assertIn(
+            "https://raw.githubusercontent.com/GotoLu/cx-notifier-marketplace/main/scripts/install.py",
+            source,
+        )
+        self.assertIn('@("--channel", "feishu")', source)
+        self.assertIn('"py"', source)
+        self.assertIn('"python"', source)
+        self.assertIn('"python3"', source)
+        self.assertIn("sys.version_info >= (3, 10)", source)
+        self.assertIn(r"*\WindowsApps\*", source)
+        self.assertIn("Remove-Item", source)
+
     def test_auto_installs_all_detected_clients_and_configures_once(self) -> None:
         installs: list[tuple[str, str]] = []
         with mock.patch.object(

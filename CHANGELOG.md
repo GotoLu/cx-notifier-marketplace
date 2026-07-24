@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.6.0 - 2026-07-24
+
+- Add a one-command PowerShell installer that installs the plugin and configures a tested Feishu channel.
+- Add native Windows Codex Hook commands with a fail-open Python launcher.
+- Keep the existing macOS/Linux and Claude Code Hook paths unchanged.
+
 ## 0.5.2 - 2026-07-15
 
 - Add a zero-secret, one-command desktop notification setup path for macOS and Linux.

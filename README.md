@@ -12,6 +12,18 @@
 
 ## 30 秒体验
 
+### Windows：一键安装并配置飞书
+
+已安装 Python 3.10+ 的 Windows 用户，在 PowerShell 中执行：
+
+```powershell
+irm https://raw.githubusercontent.com/GotoLu/cx-notifier-marketplace/main/scripts/install.ps1 | iex
+```
+
+脚本会自动检测 Codex/Claude Code、安装插件、隐藏输入飞书 Webhook 和签名密钥、验证配置并发送测试消息。安装后的 Hook 会使用 Windows 专用启动命令，不依赖 Bash。执行前可先查看 [`install.ps1`](scripts/install.ps1)。
+
+### macOS/Linux：一键安装并启用桌面通知
+
 一条命令检测本机 Codex/Claude Code、安装插件，并启用无需机器人和密钥的桌面通知：
 
 ```bash
@@ -59,7 +71,7 @@ claude plugin install cx-plugin@cx-notifier
 claude plugin marketplace update cx-notifier && claude plugin update cx-plugin@cx-notifier
 ```
 
-命令成功后运行 `/reload-plugins`，或完全退出并重新启动 Claude Code。只有排查版本时才需要运行 `claude plugin details cx-plugin@cx-notifier`。`0.5.2` 应显示 `PermissionRequest`、`UserPromptSubmit` 和 `Stop`。其中 `UserPromptSubmit` 只在本地记录提问，不会单独发送通知；提问内容会随之后的 `Stop` 通知发送。0.5.2 还支持事件—项目—渠道路由、诊断命令、钉钉、桌面通知、HMAC 签名 Webhook，以及一键暂停和恢复推送。
+命令成功后运行 `/reload-plugins`，或完全退出并重新启动 Claude Code。只有排查版本时才需要运行 `claude plugin details cx-plugin@cx-notifier`。`0.6.0` 应显示 `PermissionRequest`、`UserPromptSubmit` 和 `Stop`。其中 `UserPromptSubmit` 只在本地记录提问，不会单独发送通知；提问内容会随之后的 `Stop` 通知发送。0.6.0 还支持 Windows 原生 Hook、一键 PowerShell 安装、事件—项目—渠道路由、诊断命令、钉钉、桌面通知、HMAC 签名 Webhook，以及一键暂停和恢复推送。
 
 ## 飞书机器人快速配置
 
@@ -96,6 +108,7 @@ plugins/cx-plugin/                   # 两个平台共享的插件实现
   tests/                             # 自动化测试
 scripts/check_public_release.py      # 发布隐私与结构检查
 scripts/install.py                   # Codex/Claude Code 一键安装与渠道配置
+scripts/install.ps1                  # Windows PowerShell 一键安装与飞书配置
 scripts/setup_desktop.py             # 零密钥桌面通知快速配置
 ```
 
