@@ -1,0 +1,52 @@
+name: Windows installation acceptance
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - feature/windows-one-click-install
+    paths:
+      - ".github/workflows/windows-install.yml"
+      - "plugins/cx-plugin/**"
+      - "scripts/**"
+      - "tests/**"
+  pull_request:
+    paths:
+      - ".github/workflows/windows-install.yml"
+      - "plugins/cx-plugin/**"
+      - "scripts/**"
+      - "tests/**"
+
+permissions:
+  contents: read
+
+jobs:
+  windows-install:
+    runs-on: windows-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Exercise PowerShell installer and cmd Hook
+        shell: powershell
+        run: .\tests\windows-install-acceptance.ps1
+
+      - name: Run release installer tests
+        shell: powershell
+        run: python -m unittest discover -s tests -p "test_*.py"
+
+      - name: Run plugin tests
+        shell: powershell
+        run: python -m unittest discover -s plugins/cx-plugin/tests -p "test_*.py"
+
+      - name: Check public release contents
+        shell: powershell
+        run: python scripts/check_public_release.py
