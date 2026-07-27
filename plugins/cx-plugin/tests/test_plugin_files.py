@@ -64,6 +64,7 @@ class PluginFileTests(unittest.TestCase):
 
     def test_windows_launcher_is_fail_open_and_finds_supported_python(self) -> None:
         launcher = (ROOT / "hooks" / "notify.cmd").read_text(encoding="utf-8")
+        self.assertIn('set "PYTHONUTF8=1"', launcher)
         self.assertIn("py -3", launcher)
         self.assertIn("python ", launcher)
         self.assertIn("python3 ", launcher)
