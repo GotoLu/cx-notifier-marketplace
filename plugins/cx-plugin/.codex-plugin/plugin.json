@@ -1,6 +1,6 @@
 {
   "name": "cx-plugin",
-  "version": "0.5.2",
+  "version": "0.6.0",
   "description": "The human pager for Codex and Claude Code—get called back when the agent needs you.",
   "author": {
     "name": "GotoLu",

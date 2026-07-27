@@ -12,11 +12,12 @@ class PluginFileTests(unittest.TestCase):
     def test_manifest_and_default_hook_discovery(self) -> None:
         manifest = json.loads((ROOT / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8"))
         self.assertEqual(manifest["name"], ROOT.name)
-        self.assertEqual(manifest["version"].split("+", 1)[0], "0.5.2")
+        self.assertEqual(manifest["version"].split("+", 1)[0], "0.6.0")
         self.assertNotIn("hooks", manifest)
         self.assertNotIn("apps", manifest)
         self.assertNotIn("mcpServers", manifest)
         self.assertTrue((ROOT / "hooks" / "hooks.json").is_file())
+        self.assertTrue((ROOT / "hooks" / "notify.cmd").is_file())
         self.assertTrue((ROOT / "scripts" / "pause.py").is_file())
         self.assertTrue((ROOT / "assets" / "icon.png").is_file())
         self.assertTrue((ROOT / "assets" / "logo.png").is_file())
@@ -39,6 +40,10 @@ class PluginFileTests(unittest.TestCase):
                 for handler in group["hooks"]:
                     self.assertEqual(handler["timeout"], 5)
                     self.assertIn("${CLAUDE_PLUGIN_ROOT:-${PLUGIN_ROOT}}", handler["command"])
+                    self.assertEqual(
+                        handler["commandWindows"],
+                        'call "%PLUGIN_ROOT%\\hooks\\notify.cmd"',
+                    )
 
     def test_hooks_are_notification_only_and_bounded(self) -> None:
         hooks = json.loads((ROOT / "hooks" / "hooks.json").read_text(encoding="utf-8"))["hooks"]
@@ -51,9 +56,22 @@ class PluginFileTests(unittest.TestCase):
                     self.assertEqual(handler["timeout"], 5)
                     self.assertIn("${PLUGIN_ROOT}", handler["command"])
                     self.assertIn("${CLAUDE_PLUGIN_ROOT", handler["command"])
+                    self.assertIn("%PLUGIN_ROOT%", handler["commandWindows"])
+                    self.assertIn("notify.cmd", handler["commandWindows"])
                     command = handler["command"].lower()
                     self.assertNotIn("allow", command)
                     self.assertNotIn("deny", command)
+
+    def test_windows_launcher_is_fail_open_and_finds_supported_python(self) -> None:
+        launcher = (ROOT / "hooks" / "notify.cmd").read_text(encoding="utf-8")
+        self.assertIn('set "PYTHONUTF8=1"', launcher)
+        self.assertIn("py -3", launcher)
+        self.assertIn("python ", launcher)
+        self.assertIn("python3 ", launcher)
+        self.assertIn("sys.version_info >= (3, 10)", launcher)
+        self.assertIn('findstr /I /V "WindowsApps"', launcher)
+        self.assertIn("echo {}", launcher)
+        self.assertIn("exit /b 0", launcher)
 
     def test_no_prompt_protocol_hook_remains(self) -> None:
         self.assertFalse((ROOT / "hooks" / "session_start.py").exists())

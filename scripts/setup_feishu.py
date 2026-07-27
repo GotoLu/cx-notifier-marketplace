@@ -31,7 +31,8 @@ def _run_output(command: list[str]) -> str | None:
             stderr=subprocess.DEVNULL,
             check=False,
             timeout=15,
-            text=True,
+            encoding="utf-8",
+            errors="replace",
         )
     except (OSError, subprocess.TimeoutExpired):
         return None
@@ -110,7 +111,7 @@ def _run_configure(configure: Path, config: Path, *arguments: str, capture: bool
         stdout=subprocess.PIPE if capture else None,
         stderr=subprocess.PIPE if capture else None,
         check=False,
-        text=True,
+        encoding="utf-8",
     )
 
 

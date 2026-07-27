@@ -14,6 +14,18 @@
 
 先安装插件，再启用不需要机器人和密钥的桌面通知。确认它适合你的工作流后，再配置飞书等移动渠道。
 
+### Windows 一键安装并配置飞书
+
+已安装 Python 3.10+ 的 Windows 用户，在 PowerShell 中执行：
+
+```powershell
+irm https://raw.githubusercontent.com/GotoLu/cx-notifier-marketplace/main/scripts/install.ps1 | iex
+```
+
+脚本会自动检测 Codex/Claude Code、安装插件、隐藏输入飞书 Webhook 和签名密钥、验证配置并发送测试消息。Windows 原生 Codex 通过 `commandWindows` 调用插件内的 Python 启动器，不要求 Git Bash。执行前可先查看 [`install.ps1`](https://github.com/GotoLu/cx-notifier-marketplace/blob/main/scripts/install.ps1)。
+
+如果尚未安装 Python，可先执行 `winget install -e --id Python.Python.3.12`，重新打开 PowerShell 后再运行上面的一键命令。
+
 ### 1. 安装到 Codex 或 Claude Code
 
 Codex：
@@ -151,7 +163,7 @@ claude plugin marketplace update cx-notifier && claude plugin update cx-plugin@c
 claude plugin details cx-plugin@cx-notifier
 ```
 
-`0.5.2` 应显示三个 Hooks：`PermissionRequest`、`UserPromptSubmit`、`Stop`。`UserPromptSubmit` 不会单独发送飞书消息，它只在本地记录提问；对应的 `Stop` 通知会显示“提问：…”。如果仍显示旧版本，说明 marketplace 尚未刷新。
+`0.6.0` 应显示三个 Hooks：`PermissionRequest`、`UserPromptSubmit`、`Stop`。`UserPromptSubmit` 不会单独发送飞书消息，它只在本地记录提问；对应的 `Stop` 通知会显示“提问：…”。如果仍显示旧版本，说明 marketplace 尚未刷新。
 
 ## 飞书机器人配置（从零开始）
 
