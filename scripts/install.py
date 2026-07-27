@@ -35,7 +35,8 @@ def _run(command: list[str], *, capture: bool = False) -> subprocess.CompletedPr
             stderr=subprocess.PIPE if capture else None,
             check=False,
             timeout=120,
-            text=True,
+            encoding="utf-8",
+            errors="replace",
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
         return subprocess.CompletedProcess(command, 127, stdout="", stderr=str(exc))

@@ -291,7 +291,7 @@ class ConfigTests(unittest.TestCase):
                 env=environment,
                 check=False,
                 timeout=5,
-                text=True,
+                encoding="utf-8",
             )
             self.assertEqual(completed.returncode, 0, completed.stderr)
             outputs.append(completed.stdout)
@@ -316,7 +316,7 @@ class ConfigTests(unittest.TestCase):
                 stderr=subprocess.PIPE,
                 check=False,
                 timeout=5,
-                text=True,
+                encoding="utf-8",
             )
             self.assertEqual(completed.returncode, 0, completed.stderr)
             payload = json.loads(completed.stdout)
@@ -354,7 +354,7 @@ class ConfigTests(unittest.TestCase):
             stderr=subprocess.PIPE,
             check=False,
             timeout=5,
-            text=True,
+            encoding="utf-8",
         )
         self.assertEqual(completed.returncode, 2)
         self.assertEqual(load_config(self.path).channels, ())
@@ -394,7 +394,7 @@ class ConfigTests(unittest.TestCase):
                 stderr=subprocess.PIPE,
                 check=False,
                 timeout=5,
-                text=True,
+                encoding="utf-8",
             )
             self.assertEqual(completed.returncode, 0, completed.stderr)
             self.assertEqual(load_config(self.path).channels[0].mention_all, expected)
