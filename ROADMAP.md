@@ -2,7 +2,7 @@
 
 ## 当前阶段
 
-`0.6.0` Windows 一键安装与原生 Hook 已 squash 合入 `main` 并通过主分支 Windows 自动门禁，等待版本发布确认；真实飞书机器人由后续 Windows 用户验收。
+`0.6.0` Windows 一键安装与原生 Hook 已正式发布；真实飞书机器人由后续 Windows 用户继续验收。
 
 ## 已完成
 
@@ -13,19 +13,19 @@
 - GitHub Actions `windows-latest` 安装与 Hook 启动验收。
 - `0.6.0` manifest、README 和 Changelog 同步。
 - 插件、安装器、隐私与结构自动门禁通过。
+- `v0.6.0` 标签与 GitHub Release 已公开发布。
 
 ## 进行中
 
 - Windows 真实 `Stop` 飞书机器人通知验收。
-- `0.6.0` 标签与 Release 发布确认。
 
 ## 待办
 
-- 创建并推送 `v0.6.0` 标签，发布对应 Release。
+- 收集 Windows 用户安装与真实通知反馈。
 
 ## 阻塞
 
-- 无代码阻塞；公开发布需主人最终确认。
+- 无。
 
 ## 最近验证
 
@@ -38,3 +38,4 @@
 - 2026-07-27：Windows PowerShell 安装器、Codex 安装命令链和 `cmd.exe` Hook 启动通过。
 - 2026-07-27：Windows 发布层测试 13/13、插件测试 65/65、公开发布检查通过。
 - 2026-07-27：`main` squash 合并提交 `caff6b0`，合并后 Windows Actions 通过（run `30234870402`）。
+- 2026-07-27：`v0.6.0` 标签指向 `b815677`，GitHub Release “Windows 牛马已上线”公开发布。
