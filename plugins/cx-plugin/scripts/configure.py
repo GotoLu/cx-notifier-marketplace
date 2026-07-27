@@ -39,6 +39,24 @@ from cx_notify.providers import (  # noqa: E402
 )
 
 
+def _configure_stdio() -> None:
+    if os.name != "nt":
+        return
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if callable(reconfigure):
+            reconfigure(encoding="utf-8", errors="replace")
+
+
+def _read_hidden(prompt: str) -> str:
+    if sys.stdin.isatty():
+        return getpass.getpass(prompt)
+    value = sys.stdin.readline()
+    if not value:
+        raise EOFError("no value was provided on standard input")
+    return value.rstrip("\r\n")
+
+
 def _load_raw(path: Path) -> dict[str, Any]:
     try:
         value = parse_config_json(path.read_text(encoding="utf-8"))
@@ -104,7 +122,7 @@ def command_add(args: argparse.Namespace) -> int:
         if args.webhook_env:
             channel["webhook_env"] = args.webhook_env
         elif args.webhook_prompt:
-            channel["webhook_url"] = getpass.getpass("Webhook URL: ")
+            channel["webhook_url"] = _read_hidden("Webhook URL: ")
         else:
             print("a webhook source is required for this channel type", file=sys.stderr)
             return 2
@@ -118,7 +136,7 @@ def command_add(args: argparse.Namespace) -> int:
         if args.secret_env:
             channel["secret_env"] = args.secret_env
         elif args.secret_prompt:
-            channel["secret"] = getpass.getpass("Signing secret: ")
+            channel["secret"] = _read_hidden("Signing secret: ")
         elif args.type == "hmac":
             print("hmac channels require --secret-env or --secret-prompt", file=sys.stderr)
             return 2
@@ -132,7 +150,7 @@ def command_add(args: argparse.Namespace) -> int:
         if args.bearer_token_env:
             channel["bearer_token_env"] = args.bearer_token_env
         elif args.bearer_token_prompt:
-            channel["bearer_token"] = getpass.getpass("Bearer token: ")
+            channel["bearer_token"] = _read_hidden("Bearer token: ")
     elif args.bearer_token_env or args.bearer_token_prompt:
         print("bearer token options are only valid for webhook", file=sys.stderr)
         return 2
@@ -446,6 +464,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    _configure_stdio()
     parser = build_parser()
     args = parser.parse_args(argv)
     try:
