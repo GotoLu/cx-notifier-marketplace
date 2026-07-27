@@ -31,6 +31,7 @@ class InstallTests(unittest.TestCase):
         self.assertIn('"python3"', source)
         self.assertIn("sys.version_info >= (3, 10)", source)
         self.assertIn(r"*\WindowsApps\*", source)
+        self.assertIn('$env:PYTHONUTF8 = "1"', source)
         self.assertIn("Remove-Item", source)
 
     def test_auto_installs_all_detected_clients_and_configures_once(self) -> None:
