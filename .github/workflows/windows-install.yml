@@ -21,6 +21,10 @@ on:
 permissions:
   contents: read
 
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+  PYTHONUTF8: "1"
+
 jobs:
   windows-install:
     runs-on: windows-latest
