@@ -2,19 +2,21 @@
 
 ## 当前阶段
 
-`0.6.0` Windows 一键安装与原生 Hook 发布候选已通过自动门禁，等待实机验收和公开发布确认。
+`0.6.0` Windows 一键安装与原生 Hook 发布候选已通过 Windows 云端自动门禁，等待真实飞书机器人验收和公开发布确认。
 
 ## 已完成
 
 - `0.5.2`：Codex/Claude Code 共享通知 Hook、飞书/企微/钉钉/Webhook 渠道和统一安装器。
 - Windows PowerShell 一键安装与飞书配置。
 - Windows 原生 Codex Hook 启动适配。
+- Windows Python 控制台、子进程和非交互输入的 UTF-8 兼容修复。
+- GitHub Actions `windows-latest` 安装与 Hook 启动验收。
 - `0.6.0` manifest、README 和 Changelog 同步。
 - 插件、安装器、隐私与结构自动门禁通过。
 
 ## 进行中
 
-- Windows 实机安装与真实 `Stop` 飞书通知验收。
+- Windows 真实 `Stop` 飞书机器人通知验收。
 - `0.6.0` 发布候选提交和最终发布确认。
 
 ## 待办
@@ -32,3 +34,6 @@
 - 2026-07-24：公开发布隐私门禁通过。
 - 2026-07-24：Codex 插件结构验证通过。
 - 2026-07-24：`git diff --check` 通过。
+- 2026-07-27：GitHub Actions Windows 安装验收通过（run `30234512595`）。
+- 2026-07-27：Windows PowerShell 安装器、Codex 安装命令链和 `cmd.exe` Hook 启动通过。
+- 2026-07-27：Windows 发布层测试 13/13、插件测试 65/65、公开发布检查通过。
