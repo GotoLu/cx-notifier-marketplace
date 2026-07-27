@@ -1,6 +1,7 @@
 @echo off
 setlocal
 
+set "PYTHONUTF8=1"
 set "CX_NOTIFY_SCRIPT=%~dp0notify.py"
 
 py -3 -c "import sys; raise SystemExit(0 if sys.version_info >= (3, 10) else 1)" >nul 2>&1
