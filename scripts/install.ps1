@@ -40,8 +40,11 @@ $installerArguments = @("--channel", "feishu")
 if ($args.Count -gt 0) {
     $installerArguments = @($args)
 }
+$hadPythonUtf8 = Test-Path Env:PYTHONUTF8
+$previousPythonUtf8 = $env:PYTHONUTF8
 
 try {
+    $env:PYTHONUTF8 = "1"
     Write-Host "Downloading the CX Notifier installer..."
     Invoke-WebRequest -UseBasicParsing -Uri $InstallerUrl -OutFile $InstallerPath
     & $pythonCommand @pythonPrefix $InstallerPath @installerArguments
@@ -51,4 +54,10 @@ try {
 }
 finally {
     Remove-Item -LiteralPath $InstallerPath -Force -ErrorAction SilentlyContinue
+    if ($hadPythonUtf8) {
+        $env:PYTHONUTF8 = $previousPythonUtf8
+    }
+    else {
+        Remove-Item Env:PYTHONUTF8 -ErrorAction SilentlyContinue
+    }
 }
